@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <title>Admin · E-RHK</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#0F2A4A">
+  <meta name="theme-color" content="#7A9A2E">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <script src="pdf-lib.min.js"></script>
@@ -97,6 +99,11 @@
     .st.ok{background:var(--hijau-bg);color:var(--hijau)}
     .st.hapus{background:#f1f5f9;color:var(--abu)}
     .st.merah{background:var(--merah-bg);color:var(--merah)}
+    .tb th.no,.tb td.no{width:42px;text-align:right;color:var(--abu);font-variant-numeric:tabular-nums;padding-right:6px}
+    .tb td{overflow-wrap:anywhere}
+    .chip.merah{background:#fee2e2;color:#991b1b}
+    .ava{cursor:pointer;position:relative;overflow:hidden}
+    .ava img{width:100%;height:100%;object-fit:cover;display:block}
     .chip{display:inline-block;font-size:11px;font-weight:700;background:#eef2f7;color:var(--navy);border-radius:6px;padding:1px 7px;white-space:nowrap}
     .tabel-wrap{overflow:auto;border:1px solid var(--garis);border-radius:var(--r);background:#fff}
     table.tb{border-collapse:collapse;width:100%;font-size:13px}
@@ -154,14 +161,97 @@
     #toast.gagal{background:var(--merah)}
     #layar{position:fixed;inset:0;background:#000;z-index:120;display:flex;align-items:center;justify-content:center}
     #layar img{max-width:100vw;max-height:100vh}
+      /* ================= TEMA: Hijau Segar + Oranye Semangat (hanya tampilan) ================= */
+    :root{
+      --bg:#F6F7F2; --card:#FFFFFF; --border:#D6D8D2; --primary:#7A9A2E; --primary-dark:#5E7A1E;
+      --accent:#F28C28; --accent-soft:#FFE8D1; --accent-text:#8A4510; --text:#2A2C29; --text-muted:#8C8F88; --error:#DC2626;
+      --navy:var(--primary-dark); --navy2:var(--primary); --toska:var(--primary); --toska2:var(--primary-dark); --emas:var(--accent);
+      --teks:var(--text); --abu:var(--text-muted); --abu2:#A9ACA4; --garis:var(--border); --latar:var(--bg); --putih:var(--card);
+      --hijau:var(--primary-dark); --hijau-bg:#EEF2E3; --merah:var(--error); --merah-bg:#FDECEC; --kuning:#C96A12; --kuning-bg:var(--accent-soft); --r:12px;
+    }
+    html,body{font-family:'Plus Jakarta Sans',Poppins,sans-serif;background:var(--bg);color:var(--text)}
+    h1,h2,h3,b,strong,th,.btn{font-weight:600}
+    a{color:var(--primary-dark)}
+
+    /* menu samping: putih, pita hijau di atas, menu aktif hijau */
+    #sb{background:var(--card);color:var(--text);border-right:1px solid var(--border)}
+    .sb-atas{background:var(--primary);color:#fff;border-radius:0 0 14px 14px;margin:0 0 8px}
+    .sb-atas b{color:#fff}.sb-atas small{color:#EAF2D5}
+    #menu button{color:#5C5F58}
+    #menu button svg{opacity:.6}
+    #menu button:hover{background:#F4F7EC;color:var(--primary-dark)}
+    #menu button.on{background:#EEF2E3;color:var(--primary-dark);font-weight:600}
+    #menu button.on svg{opacity:1;color:var(--primary)}
+    #menu .bdg{background:var(--accent);color:#fff}
+    #menu .pemisah{background:var(--border)}
+    .sb-bawah{border-top:1px solid var(--border)}
+    .sb-bawah b{color:var(--text)}
+    .sb-bawah small{color:var(--text-muted)}
+    .sb-bawah .ava{background:#EEF2E3;color:var(--primary-dark)}
+    .sb-bawah button{color:var(--primary-dark);border-color:var(--border);background:var(--card)}
+    .sb-bawah button:hover{background:#F4F7EC}
+
+    /* bilah atas di HP: hijau */
+    @media (max-width:900px){
+      .bar-atas{background:var(--primary)!important;color:#fff;border-bottom:0!important;border-radius:0 0 14px 14px;padding:10px 12px!important;margin:0 -2px 10px}
+      .bar-atas button{background:rgba(255,255,255,.18)!important;border-color:transparent!important;color:#fff}
+    }
+
+    /* kartu & angka */
+    .kartu,.angka div,.langkah{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:none}
+    .angka div[onclick]:hover{border-color:var(--primary)}
+
+    /* tombol: simpan = hijau, sekunder = putih bergaris (teks hijau), aksi utama = oranye */
+    .btn{background:var(--primary);border-color:var(--primary);color:#fff;border-radius:12px}
+    .btn:hover{background:var(--primary-dark);border-color:var(--primary-dark)}
+    .btn.garis{background:var(--card);color:var(--primary-dark);border-color:var(--border)}
+    .btn.garis:hover{background:#F4F7EC;border-color:var(--primary)}
+    .btn.toska{background:var(--accent);border-color:var(--accent);color:#fff}
+    .btn.toska:hover{background:#E07B17;border-color:#E07B17}
+    .btn.toska.kecil,.tb .btn.toska,.bar-pilih .btn.toska{background:var(--primary);border-color:var(--primary)}
+    .btn.toska.kecil:hover,.tb .btn.toska:hover{background:var(--primary-dark)}
+    .btn.merah{background:var(--card);color:var(--error);border-color:#F3C4C4}
+    .btn.kecil{border-radius:10px}
+
+    /* status & label */
+    .st.ok{background:#EEF2E3;color:var(--primary-dark)}
+    .st.tunggu{background:var(--accent-soft);color:var(--accent-text)}
+    .st.hapus{background:#F1F2EE;color:var(--text-muted)}
+    .chip{background:#EEF2E3;color:var(--primary-dark)}
+    .alert.kuning{background:var(--accent-soft);color:var(--accent-text);border-color:#F8C995}
+    .alert.kuning::before{content:'⚡ '}
+    .alert.hijau{background:#EEF2E3;color:var(--primary-dark);border-color:#CFDDB0}
+
+    /* tabel */
+    .tb th{background:#F8F9F4;color:var(--text-muted)}
+    .tb td{border-bottom-color:#ECEDE8}
+    .tb tr:hover td{background:#FAFBF6}
+    .tb tr.pilih td{background:#F4F7EC}
+    .rekap-sel.cukup{color:var(--primary-dark)}
+    .rekap-sel.kurang{color:var(--error)}
+
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(122,154,46,.2)}
+    #toast{background:var(--text)}
+    .progres i,#i2Bar{background:var(--accent)}
+
+    /* pengaturan tampilan login (Big Bos) */
+    .pilih-media{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
+    .pilih-media label{border:1px solid var(--border);border-radius:12px;padding:10px 12px;cursor:pointer;display:flex;gap:8px;align-items:flex-start;font-weight:400;font-size:13px;background:var(--card)}
+    .pilih-media label b{display:block;font-size:13px}
+    .pilih-media label small{color:var(--text-muted);font-size:11px}
+    .pilih-media input{width:auto;margin-top:3px;accent-color:var(--primary)}
+    .pilih-media label:has(input:checked){border-color:var(--primary);background:#F4F7EC}
+    .pratinjau-media{max-width:360px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#1d2216}
+    .pratinjau-media video,.pratinjau-media img{width:100%;display:block}
+    input[type=checkbox],input[type=radio]{accent-color:var(--primary)}
   </style>
 </head>
 <body>
 <aside id="sb">
-  <div class="sb-atas"><span id="logoSb"></span><div><b>E-RHK</b><small>Panel Admin</small></div></div>
+  <div class="sb-atas"><span id="logoSb"></span><div><b>E-RHK</b><small id="sbSub">Panel Admin</small></div></div>
   <nav id="menu"></nav>
   <div class="sb-bawah">
-    <div class="profil"><div class="ava" id="sbAva">A</div><div><b id="sbNama">Admin</b><small>Admin · Katimkab</small></div></div>
+    <div class="profil"><div class="ava" id="sbAva" onclick="menuFotoProfil()" title="Ganti foto profil">A</div><div><b id="sbNama">Admin</b><small id="sbPeran">Admin · Katimkab</small></div></div>
     <button type="button" onclick="keluar()">Keluar</button>
   </div>
 </aside>
@@ -182,8 +272,9 @@
 
   <!-- KOREKSI -->
   <section id="v-koreksi" class="hidden">
-    <div class="kepala"><div><h1>Koreksi</h1><p>Laporan menunggu koreksi, urut dari yang paling lama. Perbaiki bila perlu, lalu Setujui → PDF otomatis masuk folder Drive member.</p></div></div>
-    <div class="saring"><select id="kMember"></select><select id="kRhk"></select><input type="search" id="kCari" placeholder="Cari kegiatan, tempat, kelompok…"></div>
+    <div class="kepala"><div><h1>Koreksi</h1><p id="kKet">Laporan menunggu koreksi, urut dari yang paling lama. Perbaiki bila perlu, lalu Setujui → PDF otomatis masuk folder Drive member.</p></div></div>
+    <div id="kBigBos"></div>
+    <div class="saring"><select id="kPemilik" class="hidden"><option value="">Semua (pendamping + Katimkab)</option><option value="pendamping">Pendamping</option><option value="katimkab">Katimkab (supervisi + RHK sendiri)</option></select><select id="kMember"></select><select id="kRhk"></select><input type="search" id="kCari" placeholder="Cari kegiatan, tempat, kelompok…"></div>
     <div id="kTabel"></div>
   </section>
 
@@ -199,7 +290,7 @@
 
   <!-- SUPERVISI -->
   <section id="v-supervisi" class="hidden">
-    <div class="kepala"><div><h1>Supervisi P2K2</h1><p>Laporan supervisi oleh Katimkab. Ditandatangani dengan profil admin, langsung jadi PDF.</p></div>
+    <div class="kepala"><div><h1>Supervisi P2K2</h1><p id="sKet">Laporan supervisi oleh Katimkab, ditandatangani dengan profil Katimkab. Setelah disimpan, laporan menunggu persetujuan Big Bos.</p></div>
       <div class="alat"><input type="month" id="sBulan" style="width:auto"><button class="btn toska" type="button" onclick="bukaSupervisi()">＋ Buat supervisi</button></div></div>
     <div id="sTabel"></div>
   </section>
@@ -239,6 +330,10 @@
       <button class="btn" type="button" onclick="$('i2File').click()">Pilih file backup…</button><input type="file" id="i2File" accept=".json,application/json" class="hidden">
       <label style="display:inline-flex;align-items:center;gap:6px;margin-left:10px;font-weight:400"><input type="checkbox" id="i2Kop"> Timpa kop yang sudah ada</label>
       <div id="i2Peta" style="margin-top:10px"></div></div>
+    <div class="langkah"><h3><span class="no">4</span>Perbaiki RHK kosong</h3>
+      <p class="catatan" style="margin-bottom:10px">Laporan lama yang kolom RHK-nya kosong (tanda <span class="chip merah">RHK ?</span>) ditebak dari kode template, judul, atau keterangan — misalnya "Media Sosial" → RHK 9, "Evaluasi Kinerja" → RHK 7. Yang tidak bisa ditebak, pilih RHK-nya lewat Edit.</p>
+      <button class="btn" type="button" onclick="perbaikiRhk()">Perbaiki RHK kosong</button>
+      <div id="iRhkHasil" style="margin-top:10px"></div></div>
   </section>
 
   <!-- TEMPAT SAMPAH -->
@@ -249,9 +344,36 @@
 
   <!-- PENGATURAN -->
   <section id="v-atur" class="hidden">
-    <div class="kepala"><div><h1>Pengaturan</h1><p>Profil admin, target, wilayah, dan isi baku laporan P2K2.</p></div></div>
-    <div class="kartu"><h2>Profil admin (Katimkab) <small>penanda tangan laporan supervisi</small></h2>
+    <div class="kepala"><div><h1>Pengaturan</h1><p>Profil, target, wilayah, dan isi baku laporan P2K2.</p></div></div>
+    <div class="kartu hidden" id="kartuLoginMedia"><h2>Tampilan login <small>yang dilihat member sebelum memasukkan token</small></h2>
+      <div class="pilih-media">
+        <label><input type="radio" name="lmMedia" value="pembuka"><span><b>🎬 Video Pembuka</b><small>video salam (bawaan)</small></span></label>
+        <label><input type="radio" name="lmMedia" value="promosi"><span><b>📣 Promosi / Iklan</b><small>foto atau video promosi</small></span></label>
+        <label><input type="radio" name="lmMedia" value="animasi"><span><b>🙌 Animasi tokoh</b><small>tampilan lama Aplikasi 1</small></span></label>
+        <label><input type="radio" name="lmMedia" value="tidak"><span><b>⬜ Tanpa media</b><small>langsung kolom token</small></span></label>
+      </div>
+      <div id="lmPromo" class="hidden">
+        <div class="g2"><div class="fg"><label>Jenis promosi</label><select id="lmJenis"><option value="foto">Foto / gambar</option><option value="video">Video</option></select></div>
+          <div class="fg"><label>Link tombol "Info lebih lanjut" (opsional)</label><input id="lmLink" placeholder="https://wa.me/62…"></div></div>
+        <div class="fg"><label>Teks di bawah promosi (opsional)</label><input id="lmTeks" maxlength="200" placeholder="cth. Butuh aplikasi untuk usaha Anda? Hubungi kami"></div>
+        <div id="lmFotoBox"><label>Foto promosi</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button class="btn garis" type="button" onclick="pilihFotoPromo()">Unggah foto</button><button class="btn merah" type="button" onclick="simpanFotoPromo('')">Hapus foto</button></div></div>
+        <div id="lmVideoInfo" class="catatan hidden" style="margin-bottom:10px">Video promosi = file <code>media/promosi.mp4</code> di GitHub (unggah/timpa file itu untuk mengganti video). Bila file belum ada, login otomatis memakai animasi tokoh.</div>
+      </div>
+      <div class="catatan" style="margin-bottom:10px">Video langsung berputar saat aplikasi dibuka. Bila browser belum mengizinkan suara, video jalan tanpa suara dan suara menyala saat layar disentuh. Video pembuka = file <code>media/pembuka.mp4</code> di GitHub.</div>
+      <div class="pratinjau-media" id="lmPratinjau"></div>
+      <button class="btn" type="button" style="margin-top:12px" onclick="simpanLoginMedia()">Simpan tampilan login</button></div>
+    <div class="kartu hidden" id="kartuBos"><h2>Profil Big Bos <small>atasan yang menyetujui laporan Katimkab</small></h2>
+      <div class="g3"><div class="fg"><label>Nama lengkap + gelar</label><input id="bsNama"></div><div class="fg"><label>Jabatan</label><input id="bsJabatan" placeholder="Big Bos"></div><div class="fg"><label>NIP</label><input id="bsNip" inputmode="numeric"></div></div>
+      <button class="btn" type="button" onclick="simpanProfilBos()">Simpan profil Big Bos</button>
+      <h4 style="margin:16px 0 8px">Token login Katimkab</h4>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><code id="bsTokAdm" style="font-size:15px">••••••••</code>
+        <button class="btn garis kecil" type="button" onclick="lihatTokenAdmin()">Lihat</button>
+        <button class="btn merah kecil" type="button" onclick="resetTokenAdmin()">Buat token baru</button></div>
+      <div class="catatan" style="margin-top:6px">Token baru langsung berlaku; token lama Katimkab tidak bisa dipakai lagi.</div></div>
+    <div class="kartu"><h2>Profil Katimkab <small>penanda tangan supervisi &amp; akun "Laporan Saya"</small></h2>
       <div class="g2"><div class="fg"><label>Nama lengkap + gelar</label><input id="aNama"></div><div class="fg"><label>NIP</label><input id="aNip" inputmode="numeric"></div></div>
+      <div class="g3"><div class="fg"><label>Gmail (folder Drive laporan sendiri)</label><input id="aGmail" type="email" placeholder="nama@gmail.com"></div><div class="fg"><label>Tempat (kota TTD)</label><input id="aTempat"></div><div class="fg"><label>Kecamatan</label><input id="aKec"></div></div>
       <label>Tanda tangan</label><div class="ttd-kotak" id="aTtd"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         <button class="btn" type="button" onclick="simpanProfil()">Simpan profil</button>
@@ -274,8 +396,8 @@
       <div id="aLibur"></div>
       <div style="display:flex;gap:8px;margin-top:8px"><button class="btn garis" type="button" onclick="tambahLibur()">＋ Tambah tanggal</button><button class="btn" type="button" onclick="simpanKalender()">Simpan</button></div></div>
     <div class="kartu"><h2>Keamanan &amp; data</h2>
-      <div class="g2"><div class="fg"><label>Token admin baru</label><input id="aToken" placeholder="min. 8 karakter" style="text-transform:uppercase;font-family:Consolas,monospace"></div>
-        <div class="fg" style="display:flex;align-items:flex-end"><button class="btn" type="button" onclick="gantiToken()">Ganti token admin</button></div></div>
+      <div class="g2"><div class="fg"><label id="aTokenLbl">Token admin baru</label><input id="aToken" placeholder="min. 8 karakter" style="text-transform:uppercase;font-family:Consolas,monospace"></div>
+        <div class="fg" style="display:flex;align-items:flex-end"><button class="btn" type="button" onclick="gantiToken()" id="aTokenBtn">Ganti token admin</button></div></div>
       <div id="aInfo" class="catatan"></div></div>
   </section>
 </main>
@@ -354,7 +476,6 @@ async function drawLap(ctx,l,X){
   else{setF('normal',9.5);text('Foto tersimpan di Google Drive:',xx+cw/2,ry+ch/2-3,{align:'center',color:GREY});let s=clean(f.link);const full=s;while(s.length>8&&tw(s+'...')>cw-6)s=s.slice(0,-1);if(s!==full)s+='...';text(s,xx+cw/2,ry+ch/2+3,{align:'center',color:BLUE});setF('normal',FS)}
   if(f.ket){setF('italic',10);text(wrapAll(f.ket,cw)[0],xx+cw/2,ry+ch+4.6,{align:'center'});setF('normal',FS)}
   if(c===1||i===fs.length-1)y=ry+ch+(hk?8:3)}}
-
   // ================= INTI =================
   const $ = id => document.getElementById(id);
   const BLN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -418,9 +539,10 @@ async function drawLap(ctx,l,X){
     template:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
     impor:'<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/>',
     sampah:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
-    atur:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
+    atur:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+    saya:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
   };
-  const MENU = [['beranda','Beranda'],['koreksi','Koreksi'],['rekap','Rekap'],['supervisi','Supervisi P2K2'],['member','Member'],['template','Template & Kop'],null,['impor','Impor Data'],['sampah','Tempat Sampah'],['atur','Pengaturan']];
+  const MENU = [['beranda','Beranda'],['koreksi','Koreksi'],['rekap','Rekap'],['supervisi','Supervisi P2K2'],['saya','Laporan Saya'],['member','Member'],['template','Template & Kop'],null,['impor','Impor Data'],['sampah','Tempat Sampah'],['atur','Pengaturan']];
   $('menu').innerHTML = MENU.map(m => !m ? '<div class="pemisah"></div>' :
     '<button type="button" data-v="'+m[0]+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+IKON[m[0]]+'</svg>'+m[1]+'<span class="bdg" id="bdg-'+m[0]+'"></span></button>').join('');
   $('menu').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (b) buka(b.dataset.v); });
@@ -428,6 +550,7 @@ async function drawLap(ctx,l,X){
   function bukaMenu(){ document.body.classList.add('buka'); $('tirai').classList.remove('hidden'); }
   const MUAT = {};   // view → fungsi muat
   function buka(v){
+    if (v === 'saya'){ location.href = 'index.html?saya=1'; return; }   // Katimkab mengisi laporan RHK sendiri di form member
     A.view = v;
     document.querySelectorAll('#menu button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
     document.querySelectorAll('main > section').forEach(s => s.classList.toggle('hidden', s.id !== 'v-'+v));
@@ -436,6 +559,24 @@ async function drawLap(ctx,l,X){
     try{ history.replaceState(null, '', '#'+v); }catch(e){}
     window.scrollTo(0, 0);
     if (MUAT[v]) MUAT[v]();
+  }
+  /** Laporan milik Katimkab (RHK sendiri / supervisi) hanya disetujui Big Bos. */
+  const milikKatim = l => l.memberId === 'ADMIN' || l.jenis === 'supervisi';
+  const bolehSetujui = l => A.super || !milikKatim(l);
+  const bolehUbah = l => A.super || !milikKatim(l) || l.status !== 'Disetujui';
+  const chipBos = '<span class="st tunggu" title="Hanya Big Bos yang bisa menyetujui">Menunggu Big Bos</span>';
+  function aturPeran(){
+    A.super = A.init.peran === 'super';
+    document.body.classList.toggle('bigbos', A.super);
+    $('sbSub').textContent = A.super ? 'Panel ' + (A.init.profilSuper.jabatan || 'Big Bos') : 'Panel Admin';
+    const sy = document.querySelector('#menu button[data-v="saya"]'); if (sy) sy.classList.toggle('hidden', A.super);
+    $('kPemilik').classList.toggle('hidden', !A.super);
+    $('kKet').textContent = A.super
+      ? 'Semua laporan menunggu persetujuan: pendamping maupun Katimkab (supervisi + RHK sendiri). Setujui → PDF otomatis masuk folder Drive.'
+      : 'Laporan pendamping yang menunggu koreksi, urut dari yang paling lama. Perbaiki bila perlu, lalu Setujui → PDF otomatis masuk folder Drive member.';
+    $('sKet').textContent = A.super
+      ? 'Laporan supervisi oleh Katimkab, ditandatangani dengan profil Katimkab. Sebagai Big Bos, Anda yang menyetujui dan membuat PDF-nya.'
+      : 'Laporan supervisi oleh Katimkab, ditandatangani dengan profil Katimkab. Setelah disimpan, laporan menunggu persetujuan Big Bos.';
   }
   function aturBadge(){
     const j = A.init.jumlah;
@@ -449,20 +590,21 @@ async function drawLap(ctx,l,X){
     const bln = $('bBulan').value || bulanIni();
     $('bBulan').value = bln;
     const h = new Date().getHours();
-    $('sapa').textContent = (h<10?'Selamat pagi':h<15?'Selamat siang':h<18?'Selamat sore':'Selamat malam') + ', ' + (A.init.profil.nama || 'Admin');
+    $('sapa').textContent = (h<10?'Selamat pagi':h<15?'Selamat siang':h<18?'Selamat sore':'Selamat malam') + ', ' + ((A.super ? A.init.profilSuper.nama || A.init.profilSuper.jabatan : A.init.profil.nama) || 'Admin');
     let r; try{ r = await jalan('Memuat rekap…', () => api('adminRekap', bln)); }catch(e){ return; }
     const j = A.init.jumlah, aktif = A.init.member.filter(m => m.aktif).length;
     $('bAngka').innerHTML =
       '<div onclick="buka(\'koreksi\')"><b style="color:var(--kuning)">'+j.menunggu+'</b><span>Menunggu koreksi</span></div>'+
+      (j.menungguBigBos ? '<div onclick="'+(A.super?'$(\'kPemilik\').value=\'katimkab\';':'')+'buka(\''+(A.super?'koreksi':'rekap')+'\')"><b style="color:var(--kuning)">'+j.menungguBigBos+'</b><span>'+(A.super?'Laporan Katimkab menunggu':'Menunggu Big Bos')+'</span></div>' : '')+
       '<div onclick="buka(\'rekap\')"><b style="color:var(--hijau)">'+j.disetujui+'</b><span>Disetujui (semua bulan)</span></div>'+
       '<div onclick="buka(\'supervisi\')"><b>'+r.supervisi+'</b><span>Supervisi '+esc(fmtBulan(bln))+'</span></div>'+
       '<div onclick="buka(\'member\')"><b>'+aktif+'</b><span>Member aktif</span></div>';
     $('bUltah').innerHTML = r.ultah.length ? '<div class="alert hijau">🎂 '+r.ultah.map(u => '<b>'+esc(u.nama)+'</b> '+(u.hari===0?'<b>hari ini</b> (ke-'+u.umur+')':u.hari+' hari lagi')).join(' · ')+'</div>' : '';
     $('bKet').textContent = fmtBulan(bln);
     const t = A.init.rhk;
-    let s = '<table class="tb"><thead><tr><th>Member</th>'+t.map(x => '<th class="c" title="'+esc(x.rhk)+'">'+esc(labelRhk(x.rhk))+'</th>').join('')+'<th class="c">Total</th><th class="c">Menunggu</th><th class="c">RHK kurang</th></tr></thead><tbody>';
-    r.rekap.filter(m => m.aktif || m.total).forEach(m => {
-      s += '<tr><td><a href="#" onclick="lihatMember(\''+m.id+'\');return false">'+esc(m.nama)+'</a>'+(m.fotoGanda?' <span class="st merah" title="Ada foto mirip">foto mirip '+m.fotoGanda+'</span>':'')+'</td>'+
+    let s = '<table class="tb"><thead><tr><th class="no">No</th><th>Member</th>'+t.map(x => '<th class="c" title="'+esc(x.rhk)+'">'+esc(labelRhk(x.rhk))+'</th>').join('')+'<th class="c">Total</th><th class="c">Menunggu</th><th class="c">RHK kurang</th></tr></thead><tbody>';
+    r.rekap.filter(m => m.aktif || m.total).forEach((m, i) => {
+      s += '<tr><td class="no">'+(i+1)+'</td><td><a href="#" onclick="lihatMember(\''+m.id+'\');return false">'+esc(m.nama)+'</a>'+(m.fotoGanda?' <span class="st merah" title="Ada foto mirip">foto mirip '+m.fotoGanda+'</span>':'')+'</td>'+
         t.map(x => { const k = m.rekap.find(y => y.rhk === x.rhk) || { jumlah:0, target:x.target };
           return '<td class="c"><span class="rekap-sel '+(k.target>0 ? (k.jumlah>=k.target?'cukup':'kurang') : '')+'">'+k.jumlah+'</span><span class="kec">/'+k.target+'</span></td>'; }).join('')+
         '<td class="c"><b>'+m.total+'</b></td><td class="c">'+(m.menunggu||'–')+'</td><td class="c">'+(m.kurang ? '<span class="st merah">'+m.kurang+'</span>' : '<span class="st ok">0</span>')+'</td></tr>';
@@ -485,21 +627,23 @@ async function drawLap(ctx,l,X){
     const pilih = A.pilih[kunci] = A.pilih[kunci] || new Set();
     [...pilih].forEach(id => { if (!data.laporan.some(l => l.id === id)) pilih.delete(id); });
     if (!data.laporan.length){ $(opsi.wadah).innerHTML = '<div class="kartu kosong">'+(opsi.kosong || 'Tidak ada laporan.')+'</div>'; return; }
+    const hal = A.hal[kunci] || 0, per = data.per || 100;
+    // nomor urut hanya di tampilan, mengikuti filter & halaman
     let s = '<div class="tabel-wrap"><table class="tb"><thead><tr>'+(opsi.massal ? '<th style="width:30px"><input type="checkbox" data-semua="'+kunci+'"></th>' : '')+
-      '<th>Tanggal</th><th>Member</th><th>RHK</th><th>Kegiatan</th><th>Lokasi</th><th>Status</th><th></th></tr></thead><tbody>';
-    data.laporan.forEach(l => {
+      '<th class="no">No</th><th>Tanggal</th><th>Member</th><th>RHK</th><th>Kegiatan</th><th>Lokasi</th><th>Status</th><th></th></tr></thead><tbody>';
+    data.laporan.forEach((l, i) => {
       const ket = l.jenis === 'umum' ? (l.keterangan || '') : 'Kelompok '+(l.kelompok||'-')+(l.modul ? ' · '+l.modul : '')+(l.keterangan ? ' — '+l.keterangan : '');
       s += '<tr class="'+(pilih.has(l.id)?'pilih':'')+'">'+(opsi.massal ? '<td><input type="checkbox" data-pilih="'+kunci+'" value="'+l.id+'"'+(pilih.has(l.id)?' checked':'')+'></td>' : '')+
+        '<td class="no">'+(hal*per+i+1)+'</td>'+
         '<td class="n">'+esc(fmtTgl(l.tanggal))+'<div class="kec">'+esc(jam(l)||'')+'</div></td>'+
         '<td>'+esc(l.nama)+'</td>'+
-        '<td><span class="chip">'+(l.jenis==='supervisi'?'SUPERVISI':esc(labelRhk(l.rhk)))+'</span>'+(l.sumber && l.sumber !== 'E-RHK' ? ' <span class="kec">'+esc(l.sumber)+'</span>' : '')+'</td>'+
+        '<td>'+(l.jenis==='supervisi' ? '<span class="chip">SUPERVISI</span>' : l.rhk ? '<span class="chip">'+esc(labelRhk(l.rhk))+'</span>' : '<span class="chip merah" title="RHK belum dipilih — buka Edit">RHK ?</span>')+(l.sumber && l.sumber !== 'E-RHK' ? ' <span class="kec">'+esc(l.sumber)+'</span>' : '')+'</td>'+
         '<td class="ket"><div><b>'+esc(l.judul||'')+'</b>'+(ket ? ' — '+esc(ket) : '')+'</div>'+(l.fotoGanda ? '<span class="st merah">foto mirip</span>' : '')+'</td>'+
         '<td><div>'+esc(l.tempat||'-')+'</div><div class="kec">'+esc(l.desa ? judulKata(l.desa) : '')+'</div></td>'+
         '<td>'+chipStatus(l)+'</td>'+
         '<td><div class="aksi">'+opsi.aksi(l)+'</div></td></tr>';
     });
     s += '</tbody></table></div>';
-    const hal = A.hal[kunci] || 0, per = data.per || 100;
     if (data.total > per) s += '<div class="halaman"><span>'+(hal*per+1)+'–'+Math.min(data.total,(hal+1)*per)+' dari '+data.total+'</span><span style="display:flex;gap:6px">'+
       '<button class="btn garis kecil" '+(hal?'':'disabled')+' onclick="gantiHal(\''+kunci+'\',-1)">‹ Sebelumnya</button>'+
       '<button class="btn garis kecil" '+((hal+1)*per<data.total?'':'disabled')+' onclick="gantiHal(\''+kunci+'\',1)">Berikutnya ›</button></span></div>';
@@ -521,31 +665,39 @@ async function drawLap(ctx,l,X){
   });
   function perbaruiBar(k){ const n = A.pilih[k].size; $('bp-'+k).classList.toggle('hidden', !n); $('bpn-'+k).textContent = n; }
   function gantiHal(k, d){ A.hal[k] = Math.max(0, (A.hal[k]||0) + d); MUAT[A.view](); }
+  /** Daftar member untuk filter; Katimkab (laporan RHK sendiri) ditambahkan di atas. */
+  function pilihanMember(denganKatim){
+    const l = A.init.member.map(m => [m.id, m.nama]);
+    return denganKatim ? [['ADMIN', '★ ' + (A.init.profil.nama || 'Katimkab') + ' (Katimkab)']].concat(l) : l;
+  }
   function isiPilihan(sel, semua, daftar){ const v = $(sel).value; $(sel).innerHTML = '<option value="">'+semua+'</option>'+daftar.map(x => '<option value="'+esc(x[0])+'">'+esc(x[1])+'</option>').join(''); $(sel).value = v; }
 
   // ================= KOREKSI =================
   MUAT.koreksi = async () => {
-    isiPilihan('kMember', 'Semua member', A.init.member.map(m => [m.id, m.nama]));
+    isiPilihan('kMember', 'Semua member', pilihanMember(A.super));
     isiPilihan('kRhk', 'Semua RHK', A.init.rhk.map(t => [t.rhk, t.rhk]));
-    let d; try{ d = await jalan('Memuat…', () => api('adminDaftar', { status:'Menunggu koreksi', jenis:'bukan-supervisi', urut:'lama', memberId:$('kMember').value, rhk:$('kRhk').value, cari:$('kCari').value, halaman:A.hal.koreksi||0, per:100 })); }catch(e){ return; }
+    const f = A.super ? { pemilik:$('kPemilik').value } : { pemilik:'pendamping', jenis:'bukan-supervisi' };
+    const jb = A.init.jumlah.menungguBigBos;
+    $('kBigBos').innerHTML = !A.super && jb ? '<div class="alert kuning">⏳ '+jb+' laporan Katimkab (supervisi / RHK sendiri) menunggu persetujuan Big Bos.</div>' : '';
+    let d; try{ d = await jalan('Memuat…', () => api('adminDaftar', Object.assign(f, { status:'Menunggu koreksi', urut:'lama', memberId:$('kMember').value, rhk:$('kRhk').value, cari:$('kCari').value, halaman:A.hal.koreksi||0, per:100 }))); }catch(e){ return; }
     tabel('koreksi', d, { wadah:'kTabel', kosong:'🎉 Tidak ada laporan yang menunggu koreksi.',
       aksi: l => '<button class="btn garis kecil" onclick="lihat(\''+l.id+'\')">Lihat</button><button class="btn garis kecil" onclick="ubah(\''+l.id+'\')">Edit</button><button class="btn toska kecil" onclick="setujui([\''+l.id+'\'])">Setujui</button>',
       massal: [['✓ Setujui terpilih', ids => setujui(ids), 'toska'], ['Hapus terpilih', ids => hapus(ids), 'merah']] });
   };
-  ['kMember','kRhk'].forEach(i => $(i).addEventListener('change', () => { A.hal.koreksi = 0; MUAT.koreksi(); }));
+  ['kPemilik','kMember','kRhk'].forEach(i => $(i).addEventListener('change', () => { A.hal.koreksi = 0; MUAT.koreksi(); }));
   let tCari; $('kCari').addEventListener('input', () => { clearTimeout(tCari); tCari = setTimeout(() => { A.hal.koreksi = 0; MUAT.koreksi(); }, 400); });
 
   // ================= REKAP =================
   function filterRekap(){ return { bulan:$('rBulan').value, rhk:$('rRhk').value, tanggal:$('rTgl').value, memberId:$('rMember').value, status:$('rStatus').value, cari:$('rCari').value, jenis:'bukan-supervisi', urut:'baru' }; }
   MUAT.rekap = async () => {
     if (!$('rBulan').dataset.siap){ $('rBulan').value = bulanIni(); $('rBulan').dataset.siap = 1; }
-    isiPilihan('rMember', 'Semua member', A.init.member.map(m => [m.id, m.nama]));
+    isiPilihan('rMember', 'Semua member', pilihanMember(true));
     isiPilihan('rRhk', 'Semua RHK', A.init.rhk.map(t => [t.rhk, t.rhk]));
     let d; try{ d = await jalan('Memuat…', () => api('adminDaftar', Object.assign(filterRekap(), { halaman:A.hal.rekap||0, per:100 }))); }catch(e){ return; }
     tabel('rekap', d, { wadah:'rTabel', kosong:'Tidak ada laporan dengan filter ini.',
-      aksi: l => '<button class="btn garis kecil" onclick="lihat(\''+l.id+'\')">Lihat</button><button class="btn garis kecil" onclick="ubah(\''+l.id+'\')">Edit</button>'+
-        (l.status === 'Disetujui' ? linkPdf(l) : '<button class="btn garis kecil" onclick="pratinjau(\''+l.id+'\')">Cetak</button>')+
-        '<button class="btn merah kecil" onclick="hapus([\''+l.id+'\'])">Hapus</button>',
+      aksi: l => '<button class="btn garis kecil" onclick="lihat(\''+l.id+'\')">Lihat</button>'+(bolehUbah(l) ? '<button class="btn garis kecil" onclick="ubah(\''+l.id+'\')">Edit</button>' : '')+
+        (l.status === 'Disetujui' ? linkPdf(l) : (bolehSetujui(l) ? '' : chipBos)+'<button class="btn garis kecil" onclick="pratinjau(\''+l.id+'\')">Cetak</button>')+
+        (bolehUbah(l) ? '<button class="btn merah kecil" onclick="hapus([\''+l.id+'\'])">Hapus</button>' : ''),
       massal: [['✓ Setujui terpilih', ids => setujui(ids), 'toska'], ['Hapus terpilih', ids => hapus(ids), 'merah']] });
   };
   ['rBulan','rRhk','rTgl','rMember','rStatus'].forEach(i => $(i).addEventListener('change', () => { A.hal.rekap = 0; MUAT.rekap(); }));
@@ -557,9 +709,9 @@ async function drawLap(ctx,l,X){
         for (let h = 0; ; h++){ const d = await api('adminDaftar', Object.assign(filterRekap(), { halaman:h, per:200 })); semua.push(...d.laporan); if ((h+1)*200 >= d.total) break; }
       });
     }catch(e){ return; }
-    const kol = [['Tanggal','tanggal'],['Jam',l=>jam(l)],['Member','nama'],['RHK','rhk'],['Judul','judul'],['Keterangan','keterangan'],['Kelompok','kelompok'],['Desa','desa'],['Kecamatan','kecamatan'],['Tempat','tempat'],['Status','status'],['PDF','pdf'],['Sumber','sumber']];
+    const kol = [['No',(l,i)=>i+1],['Tanggal','tanggal'],['Jam',l=>jam(l)],['Member','nama'],['RHK','rhk'],['Judul','judul'],['Keterangan','keterangan'],['Kelompok','kelompok'],['Desa','desa'],['Kecamatan','kecamatan'],['Tempat','tempat'],['Status','status'],['PDF','pdf'],['Sumber','sumber']];
     const q = v => '"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-    const csv = '﻿'+kol.map(k=>q(k[0])).join(';')+'\n'+semua.map(l => kol.map(k => q(typeof k[1]==='function'?k[1](l):l[k[1]])).join(';')).join('\n');
+    const csv = '﻿'+kol.map(k=>q(k[0])).join(';')+'\n'+semua.map((l, i) => kol.map(k => q(typeof k[1]==='function'?k[1](l,i):l[k[1]])).join(';')).join('\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv' })); a.download = 'Rekap_E-RHK_'+($('rBulan').value||'semua')+'.csv'; a.click();
   }
 
@@ -596,7 +748,7 @@ async function drawLap(ctx,l,X){
           : baris('Keterangan', esc(l.keterangan)))+
       baris('Lokasi foto', esc([l.alamat, l.koordinat].filter(Boolean).join(' — ')))+baris('Sumber foto', esc(l.sumberFoto))+
       baris('Asal data', esc(l.sumber)+' · dibuat '+esc(l.dibuat))+
-      (l.disetujui ? baris('Disetujui', esc(l.disetujui)) : '')+'</dl>';
+      (l.disetujui ? baris('Disetujui', esc(l.disetujui)+(l.disetujuiOleh ? ' oleh '+esc(l.disetujuiOleh) : '')) : (bolehSetujui(l) ? '' : baris('Persetujuan', chipBos)))+'</dl>';
     if (l.fotoIds.length) s += '<h4 style="margin-bottom:8px">Foto</h4><div class="foto-grid" id="dFoto">'+l.fotoIds.map((f, i) =>
       '<figure>'+(/^https?:/.test(f) ? '<div class="kosong" style="height:120px;padding:10px;font-size:11px"><a target="_blank" href="'+esc(f)+'">Foto di link</a></div>' : '<img data-f="'+f+'" alt="">')+'<figcaption>Foto '+(i+1)+(l.fotoKet[i]?' · '+esc(l.fotoKet[i]):'')+'</figcaption></figure>').join('')+'</div>';
     if (l.scanId) s += '<p style="margin-bottom:12px">📎 <a target="_blank" href="'+urlDrive(l.scanId)+'">Scan daftar hadir</a></p>';
@@ -605,12 +757,12 @@ async function drawLap(ctx,l,X){
       l.absensi.map((a, i) => '<tr><td>'+(i+1)+'</td><td>'+esc(a.nama)+'</td><td>'+esc(a.nik)+'</td><td>'+esc(a.status)+'</td><td>'+esc(a.keterangan||'')+'</td></tr>').join('')+'</tbody></table></div>';
     s += '<div class="tombol-bawah">'+(l.status === 'Dihapus'
         ? '<button class="btn" onclick="pulihkan([\''+l.id+'\'])">Pulihkan</button>'
-        : '<button class="btn garis" onclick="ubah(\''+l.id+'\')">Edit</button>'+
+        : (bolehUbah(l) ? '<button class="btn garis" onclick="ubah(\''+l.id+'\')">Edit</button>' : '')+
           (l.status === 'Disetujui'
-            ? '<a class="btn garis" target="_blank" href="'+(l.pdfId?urlDrive(l.pdfId):'#')+'">📄 Buka PDF</a><button class="btn garis" onclick="setujui([\''+l.id+'\'],true)">Buat ulang PDF</button>'
-            : '<button class="btn toska" onclick="setujui([\''+l.id+'\'])">✓ Setujui &amp; buat PDF</button>')+
+            ? '<a class="btn garis" target="_blank" href="'+(l.pdfId?urlDrive(l.pdfId):'#')+'">📄 Buka PDF</a>'+(bolehSetujui(l) ? '<button class="btn garis" onclick="setujui([\''+l.id+'\'],true)">Buat ulang PDF</button>' : '')
+            : (bolehSetujui(l) ? '<button class="btn toska" onclick="setujui([\''+l.id+'\'])">✓ Setujui &amp; buat PDF</button>' : ''))+
           '<button class="btn garis" onclick="pratinjau(\''+l.id+'\')">Pratinjau PDF</button>'+
-          '<button class="btn merah" onclick="hapus([\''+l.id+'\'])">Hapus</button>')+'</div>';
+          (bolehUbah(l) ? '<button class="btn merah" onclick="hapus([\''+l.id+'\'])">Hapus</button>' : ''))+'</div>';
     bukaPanel(s);
     ambilFotoAdmin(l.fotoIds).then(f => document.querySelectorAll('#dFoto img').forEach(im => { if (f[im.dataset.f]) im.src = f[im.dataset.f]; else im.alt = 'Foto tidak ditemukan'; })).catch(() => {});
   }
@@ -623,6 +775,7 @@ async function drawLap(ctx,l,X){
     const p2 = l.jenis === 'supervisi' || l.rhkNo === '2';
     const kecs = Object.keys(A.init.pengaturan.wilayah || {});
     const desaList = [].concat(...Object.values(A.init.pengaturan.wilayah || {}));
+    // RHK 2 dikunci 2 jenis seperti Aplikasi 3 (pertemuan kelompok P2K2 & supervisi) → laporan format template hanya RHK 1, 3–9
     const opsiRhk = A.init.rhk.filter(t => p2 ? t.no === '2' : t.no !== '2');
     let s = '<div class="panel-kepala"><div><div class="kec">Koreksi oleh admin · '+chipStatus(l)+'</div><h3>Edit: '+esc(l.judul)+'</h3><div class="kec">'+esc(l.nama)+'</div></div><button class="x" onclick="tutupPanel()">×</button></div>';
     if (l.status === 'Disetujui') s += '<div class="alert kuning">Laporan ini sudah disetujui. Setelah disimpan, PDF dibuat ulang dan menggantikan file lama di Drive member.</div>';
@@ -657,7 +810,7 @@ async function drawLap(ctx,l,X){
       '<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn garis kecil" type="button" id="eTambahFoto" onclick="$(\'eFotoFile\').dataset.i=\'baru\';$(\'eFotoFile\').click()">＋ Tambah foto</button></div>'+
       '<input type="file" id="eFotoFile" accept="image/*" class="hidden">'+
       '<div id="eAlert" class="alert merah hidden"></div>'+
-      '<div class="tombol-bawah"><button class="btn" onclick="simpanUbah(false)">Simpan</button>'+(l.status === 'Menunggu koreksi' ? '<button class="btn toska" onclick="simpanUbah(true)">Simpan &amp; Setujui</button>' : '')+
+      '<div class="tombol-bawah"><button class="btn" onclick="simpanUbah(false)">Simpan</button>'+(l.status === 'Menunggu koreksi' && bolehSetujui(l) ? '<button class="btn toska" onclick="simpanUbah(true)">Simpan &amp; Setujui</button>' : '')+
       '<button class="btn garis" onclick="tutupPanel()">Batal</button></div>';
     bukaPanel(s);
     if (!p2){ isiTplEdit(l.tplId); $('eRhk').addEventListener('change', () => isiTplEdit('')); }
@@ -690,8 +843,12 @@ async function drawLap(ctx,l,X){
   }
   function isiTplEdit(pilih){
     const no = (A.init.rhk.find(t => t.rhk === $('eRhk').value) || {}).no;
-    const tpl = A.init.template.filter(t => !no || t.no === no);
-    $('eTpl').innerHTML = '<option value="">— Tanpa template —</option>'+tpl.map(t => '<option value="'+t.id+'"'+(t.id===pilih?' selected':'')+'>'+esc(t.kode+' — '+t.nama)+'</option>').join('');
+    // hanya template dengan nomor RHK yang sama (RHK 4 → template berkode RHK-4); bila belum ada, tampilkan semua template
+    const cocok = A.init.template.filter(t => no && t.no === no);
+    const lain = A.init.template.filter(t => cocok.indexOf(t) < 0 && (!cocok.length || t.id === pilih));
+    const op = t => '<option value="'+t.id+'"'+(t.id===pilih?' selected':'')+'>'+esc(t.kode+' — '+t.nama)+'</option>';
+    $('eTpl').innerHTML = '<option value="">— Tanpa template —</option>'+cocok.map(op).join('')+
+      (lain.length ? '<optgroup label="'+(cocok.length ? 'Template sekarang (beda RHK)' : 'Belum ada template berkode RHK ini — semua template')+'">'+lain.map(op).join('')+'</optgroup>' : '');
     $('eTpl').onchange = () => { const t = A.init.template.find(x => x.id === $('eTpl').value); if (t && (!$('eIsi').value.trim() || confirm('Ganti isi laporan dengan isi template "'+t.nama+'"?'))) $('eIsi').value = t.isi; };
   }
   function gambarFotoEdit(){
@@ -745,7 +902,6 @@ async function drawLap(ctx,l,X){
     const x = c.getContext('2d'); if (!png){ x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); } x.drawImage(im, 0, 0, c.width, c.height);
     return png ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', q || .82);
   }
-
   // ================= PDF =================
   /* Watermark diagonal + QR "laporan manual" — disalin dari Aplikasi 3 (khusus RHK 2 & supervisi P2K2). */
   async function tambahWatermark(bytes, teks, teksQr){
@@ -895,18 +1051,23 @@ async function drawLap(ctx,l,X){
     if (!$('sBulan').value) $('sBulan').value = bulanIni();
     let d; try{ d = await jalan('Memuat…', () => api('adminDaftar', { jenis:'supervisi', bulan:$('sBulan').value, urut:'baru', halaman:A.hal.supervisi||0, per:100 })); }catch(e){ return; }
     tabel('supervisi', d, { wadah:'sTabel', kosong:'Belum ada laporan supervisi di '+fmtBulan($('sBulan').value)+'.',
-      aksi: l => '<button class="btn garis kecil" onclick="lihat(\''+l.id+'\')">Lihat</button><button class="btn garis kecil" onclick="ubah(\''+l.id+'\')">Edit</button>'+
-        (l.status === 'Disetujui' ? linkPdf(l) : '<button class="btn toska kecil" onclick="setujui([\''+l.id+'\'])">Buat PDF</button>')+
-        '<button class="btn merah kecil" onclick="hapus([\''+l.id+'\'])">Hapus</button>' });
+      aksi: l => '<button class="btn garis kecil" onclick="lihat(\''+l.id+'\')">Lihat</button>'+(bolehUbah(l) ? '<button class="btn garis kecil" onclick="ubah(\''+l.id+'\')">Edit</button>' : '')+
+        (l.status === 'Disetujui' ? linkPdf(l) : A.super ? '<button class="btn toska kecil" onclick="setujui([\''+l.id+'\'])">✓ Setujui</button>' : chipBos)+
+        (bolehUbah(l) ? '<button class="btn merah kecil" onclick="hapus([\''+l.id+'\'])">Hapus</button>' : '') });
   };
   $('sBulan').addEventListener('change', () => { A.hal.supervisi = 0; MUAT.supervisi(); });
   function bukaSupervisi(){
-    if (!A.init.profil.nama) toast('Isi dulu profil admin (nama, NIP, TTD) di Pengaturan — dipakai sebagai penanda tangan.', true);
+    if (!A.init.profil.nama) toast('Isi dulu profil Katimkab (nama, NIP, TTD) di Pengaturan — dipakai sebagai penanda tangan.', true);
     bukaPanel('<div class="panel-kepala"><div><div class="kec">Supervisi P2K2 · ditandatangani '+esc(A.init.profil.nama || 'admin')+'</div><h3>Buat laporan supervisi</h3></div><button class="x" onclick="tutupPanel()">×</button></div>'+
-      '<div class="g2"><div class="fg"><label>Pendamping (member)</label><select id="svM"><option value="">Pilih member</option>'+A.init.member.filter(m => m.aktif).map(m => '<option value="'+m.id+'">'+esc(m.nama)+'</option>').join('')+'</select></div>'+
+      '<div class="g2"><div class="fg"><label>Pendamping (member)</label><select id="svM"><option value="">Pilih member</option>'+A.init.member.filter(m => m.aktif).map(m => '<option value="'+m.id+'">'+esc(m.nama)+'</option>').join('')+'<option value="__lain">➕ Pendamping lainnya (tulis sendiri)…</option></select></div>'+
       '<div class="fg"><label>Bulan kegiatan</label><input type="month" id="svB" value="'+($('sBulan').value || bulanIni())+'"></div></div>'+
+      '<div id="svLain" class="hidden"><div class="g3"><div class="fg"><label>Nama pendamping *</label><input id="svNamaL" placeholder="cth. SRI WAHYUNI"></div>'+
+        '<div class="fg"><label>NIP (opsional)</label><input id="svNipL" inputmode="numeric"></div><div class="fg"><label>Kecamatan</label><input id="svKecL" placeholder="cth. Sungai Lala"></div></div></div>'+
       '<div id="svSumber" class="catatan">Pilih member untuk melihat laporan RHK 2-nya sebagai sumber data.</div><div id="svForm"></div>');
     const muat = async () => {
+      const lain = $('svM').value === '__lain';
+      $('svLain').classList.toggle('hidden', !lain);
+      if (lain){ A.svSumber = []; $('svSumber').innerHTML = '<div class="catatan">Pendamping di luar daftar member: semua isian diketik sendiri.</div>'; formSupervisi(null); $('svNamaL').focus(); return; }
       if (!$('svM').value) return;
       let s; try{ s = await jalan('Memuat laporan RHK 2…', () => api('adminSumberSupervisi', $('svM').value, $('svB').value)); }catch(e){ return; }
       A.svSumber = s;
@@ -932,7 +1093,7 @@ async function drawLap(ctx,l,X){
       (src && src.fotoSumberId ? '<label style="display:flex;gap:8px;align-items:center;margin-bottom:12px;font-weight:400"><input type="checkbox" id="svFotoSumber" checked> Pakai foto kegiatan dari laporan pendamping</label>' : '')+
       '<div class="fg"><label>Foto supervisi (opsional, menggantikan foto pendamping)</label><input type="file" id="svFoto" accept="image/*"></div>'+
       '<div id="svAlert" class="alert merah hidden"></div>'+
-      '<div class="tombol-bawah"><button class="btn toska" onclick="simpanSupervisi()">Simpan &amp; buat PDF</button><button class="btn garis" onclick="tutupPanel()">Batal</button></div>';
+      '<div class="tombol-bawah"><button class="btn toska" onclick="simpanSupervisi()">'+(A.super ? 'Simpan &amp; setujui' : 'Simpan → kirim ke Big Bos')+'</button><button class="btn garis" onclick="tutupPanel()">Batal</button></div>';
   }
   async function simpanSupervisi(){
     const v = id => ($(id) || {}).value || '', al = $('svAlert');
@@ -942,6 +1103,7 @@ async function drawLap(ctx,l,X){
       kecamatan: src ? src.kecamatan : '', tempat: v('svTempat'), modul: v('svModul'), sesi: v('svSesi'), materi: v('svMateri'), pemateri: v('svPemateri'), jabatan: v('svJabatan'),
       hadir: v('sv_hadir'), sakit: v('sv_sakit'), izin: v('sv_izin'), alpa: v('sv_alpa'), rangkuman: v('svRangkuman'), temuan: v('svTemuan'),
       fotoDariSumber: !!($('svFotoSumber') && $('svFotoSumber').checked) };
+    if (d.memberId === '__lain') Object.assign(d, { namaLain: v('svNamaL'), nipLain: v('svNipL'), kecamatanLain: v('svKecL'), kecamatan: v('svKecL') });
     let r;
     try{
       r = await jalan('Menyimpan supervisi…', async () => {
@@ -950,7 +1112,8 @@ async function drawLap(ctx,l,X){
         return api('adminSimpanSupervisi', d);
       });
     }catch(e){ al.textContent = pesanErr(e); al.classList.remove('hidden'); return; }
-    await setujui([r.laporan.id]);
+    if (A.super){ await setujui([r.laporan.id]); return; }
+    tutupPanel(); toast('✓ Supervisi tersimpan — menunggu persetujuan Big Bos'); await segarkan(); MUAT.supervisi();
   }
 
   // ================= MEMBER =================
@@ -958,8 +1121,8 @@ async function drawLap(ctx,l,X){
     const q = $('mCari').value.trim().toLowerCase();
     const list = A.init.member.filter(m => !q || (m.nama+' '+m.nip).toLowerCase().indexOf(q) > -1);
     if (!list.length){ $('mTabel').innerHTML = '<div class="kartu kosong">Belum ada member.</div>'; return; }
-    $('mTabel').innerHTML = '<div class="tabel-wrap"><table class="tb"><thead><tr><th>Nama</th><th>Token</th><th>Gmail &amp; folder Drive</th><th>Kecamatan</th><th>TTD</th><th>Status</th><th></th></tr></thead><tbody>'+
-      list.map(m => '<tr><td><b>'+esc(m.nama)+'</b><div class="kec">'+(m.nip ? 'NIP '+esc(m.nip) : 'NIP belum diisi')+(m.sumber && m.sumber !== 'E-RHK' ? ' · '+esc(m.sumber) : '')+'</div></td>'+
+    $('mTabel').innerHTML = '<div class="tabel-wrap"><table class="tb"><thead><tr><th class="no">No</th><th>Nama</th><th>Token</th><th>Gmail &amp; folder Drive</th><th>Kecamatan</th><th>TTD</th><th>Status</th><th></th></tr></thead><tbody>'+
+      list.map((m, i) => '<tr><td class="no">'+(i+1)+'</td><td><b>'+esc(m.nama)+'</b><div class="kec">'+(m.nip ? 'NIP '+esc(m.nip) : 'NIP belum diisi')+(m.sumber && m.sumber !== 'E-RHK' ? ' · '+esc(m.sumber) : '')+'</div></td>'+
         '<td><code style="font-size:13px;letter-spacing:1px">'+esc(m.token)+'</code> <button class="btn garis kecil" onclick="salin(\''+esc(m.token)+'\')">Salin</button></td>'+
         '<td>'+(m.gmail ? esc(m.gmail)+'<div class="kec">'+(m.dibagikan ? '✓ folder dibagikan' : '<span style="color:var(--merah)">belum dibagikan</span>')+(m.folder ? ' · <a target="_blank" href="'+esc(m.folder)+'">buka folder</a>' : '')+'</div>' : '<span class="kec">Gmail belum diisi</span>')+'</td>'+
         '<td>'+esc(m.kecamatan || '-')+'</td>'+
@@ -1150,7 +1313,9 @@ async function drawLap(ctx,l,X){
   async function impor2Jalan(){
     const d = A.bk, peta = {}; document.querySelectorAll('[data-p2]').forEach(s => { peta[s.dataset.p2] = s.value; });
     let pg; try{ pg = await jalan('Menyiapkan member & TTD…', () => api('adminImpor2Pegawai', d.pegawai || [], peta)); }catch(e){ return; }
-    const list = d.laporan.filter(l => pg.peta[l.pegId]);
+    // sertakan kode + judul template asal → RHK tetap terbaca walau template yang sama sudah diimpor dari perangkat lain
+    const tplB = {}; (d.templates || []).forEach(t => { tplB[t.id] = t; });
+    const list = d.laporan.filter(l => pg.peta[l.pegId]).map(l => tplB[l.tplId] ? Object.assign({}, l, { tplKode: tplB[l.tplId].kode, tplNama: tplB[l.tplId].nama }) : l);
     const hasil = { masuk:0, dilewati:[] };
     $('i2Hasil').innerHTML = '<div class="catatan" id="i2Teks">Mengirim…</div><div class="progres"><i id="i2Bar"></i></div>';
     // kirim bertahap: ± 3 laporan atau ± 6 MB per kiriman
@@ -1171,8 +1336,103 @@ async function drawLap(ctx,l,X){
   function isiProfil(){
     const p = A.init.profil;
     $('aNama').value = p.nama || ''; $('aNip').value = p.nip || '';
+    $('aGmail').value = p.gmail || ''; $('aTempat').value = p.tempat || ''; $('aKec').value = p.kecamatan || '';
     $('aTtd').innerHTML = A.ttdAdmin ? '<img src="'+A.ttdAdmin+'">' : (p.adaTtd ? '<span class="st ok">TTD '+(p.ttdJenis==='qr'?'QR':'gambar')+' tersimpan</span>' : '<span class="catatan">Belum ada TTD</span>');
-    $('sbNama').textContent = p.nama || 'Admin'; $('sbAva').textContent = (p.nama || 'A').trim().charAt(0).toUpperCase();
+    const nm = A.super ? (A.init.profilSuper.nama || A.init.profilSuper.jabatan || 'Big Bos') : (p.nama || 'Admin');
+    const foto = A.super ? A.init.profilSuper.foto : p.foto;
+    $('sbNama').textContent = nm;
+    if (foto) $('sbAva').innerHTML = '<img src="'+foto+'" alt="Foto profil">'; else $('sbAva').textContent = nm.trim().charAt(0).toUpperCase();
+    $('sbPeran').textContent = A.super ? (A.init.profilSuper.jabatan || 'Big Bos') + ' · Super Admin' : 'Admin · Katimkab';
+    $('kartuBos').classList.toggle('hidden', !A.super);
+    $('kartuLoginMedia').classList.toggle('hidden', !A.super);
+    if (A.super && A.init.login) isiLoginMedia();
+    if (A.super){ const b = A.init.profilSuper; $('bsNama').value = b.nama || ''; $('bsJabatan').value = b.jabatan || 'Big Bos'; $('bsNip').value = b.nip || ''; }
+    $('aTokenLbl').textContent = A.super ? 'Token Big Bos baru' : 'Token admin baru';
+    $('aTokenBtn').textContent = A.super ? 'Ganti token Big Bos' : 'Ganti token admin';
+  }
+  // ---- foto profil (klik lingkaran nama di bawah menu); kosong = huruf awal nama ----
+  function menuFotoProfil(){
+    const ada = !!(A.super ? A.init.profilSuper.foto : A.init.profil.foto);
+    if (!ada || confirm('Ganti foto profil?\n\nOK = pilih foto baru\nBatal = pilihan lain')){
+      const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*';
+      i.onchange = async () => { const f = i.files[0]; if (!f) return; try{ simpanFotoProfil(await kotakFoto(f, 320)); }catch(e){ toast('Foto tidak bisa dibaca', true); } };
+      i.click();
+    } else if (confirm('Hapus foto profil dan kembali ke tampilan bawaan?')) simpanFotoProfil('');
+  }
+  function kotakFoto(file, px){
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file), im = new Image();
+      im.onload = () => { const s = Math.min(im.width, im.height), c = document.createElement('canvas'); c.width = c.height = px;
+        c.getContext('2d').drawImage(im, (im.width - s) / 2, (im.height - s) / 2, s, s, 0, 0, px, px); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', .85)); };
+      im.onerror = rej; im.src = url;
+    });
+  }
+  async function simpanFotoProfil(dataUrl){
+    let r; try{ r = await jalan(dataUrl ? 'Menyimpan foto profil…' : 'Menghapus foto…', () => api('simpanFotoProfil', dataUrl)); }catch(e){ return; }
+    (A.super ? A.init.profilSuper : A.init.profil).foto = r.foto; isiProfil();
+    toast(r.foto ? '✓ Foto profil diganti' : 'Foto profil dihapus');
+  }
+  // ---- tampilan login (khusus Big Bos) ----
+  function isiLoginMedia(){
+    const o = A.init.login;
+    document.querySelectorAll('[name=lmMedia]').forEach(r => { r.checked = r.value === o.media; });
+    $('lmJenis').value = o.promoJenis || 'foto'; $('lmTeks').value = o.promoTeks || ''; $('lmLink').value = o.promoLink || '';
+    aturFormLogin();
+  }
+  function aturFormLogin(){
+    const m = (document.querySelector('[name=lmMedia]:checked') || {}).value || 'pembuka', video = $('lmJenis').value === 'video';
+    $('lmPromo').classList.toggle('hidden', m !== 'promosi');
+    $('lmFotoBox').classList.toggle('hidden', video); $('lmVideoInfo').classList.toggle('hidden', !video);
+    const p = $('lmPratinjau'), o = A.init.login;
+    p.innerHTML = m === 'pembuka' ? '<video controls playsinline preload="metadata" poster="media/pembuka.jpg" src="media/pembuka.mp4"></video>'
+      : m === 'promosi' ? (video ? '<video controls playsinline preload="metadata" src="media/promosi.mp4"></video>' : (o.promoFoto ? '<img src="'+o.promoFoto+'" alt="Promosi">' : ''))
+      : '';
+    p.classList.toggle('hidden', !p.innerHTML);
+  }
+  document.addEventListener('change', e => { if (e.target.name === 'lmMedia' || e.target.id === 'lmJenis') aturFormLogin(); });
+  async function simpanLoginMedia(){
+    const d = { media: (document.querySelector('[name=lmMedia]:checked') || {}).value, promoJenis: $('lmJenis').value, promoTeks: $('lmTeks').value, promoLink: $('lmLink').value.trim() };
+    let r; try{ r = await jalan('Menyimpan…', () => api('superSimpanLogin', d)); }catch(e){ return; }
+    A.init.login = Object.assign({}, A.init.login, r.login, { promoFoto: A.init.login.promoFoto }); aturFormLogin();
+    toast('✓ Tampilan login tersimpan — berlaku saat halaman login dibuka berikutnya');
+  }
+  function pilihFotoPromo(){
+    const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*';
+    i.onchange = async () => { const f = i.files[0]; if (!f) return; try{ simpanFotoPromo(await kecilkanFoto(f, 1280)); }catch(e){ toast('Foto tidak bisa dibaca', true); } };
+    i.click();
+  }
+  /** Kecilkan foto promosi (sisi terpanjang px), JPEG. */
+  function kecilkanFoto(file, px){
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file), im = new Image();
+      im.onload = () => { const k = Math.min(1, px / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', .82)); };
+      im.onerror = rej; im.src = url;
+    });
+  }
+  async function simpanFotoPromo(dataUrl){
+    let r; try{ r = await jalan(dataUrl ? 'Mengunggah foto promosi…' : 'Menghapus…', () => api('superSimpanPromoFoto', dataUrl)); }catch(e){ return; }
+    A.init.login.promoFoto = r.foto; aturFormLogin(); toast(r.foto ? '✓ Foto promosi tersimpan' : 'Foto promosi dihapus');
+  }
+  async function perbaikiRhk(){
+    let r; try{ r = await jalan('Memperbaiki RHK…', () => api('adminPerbaikiRhk')); }catch(e){ return; }
+    $('iRhkHasil').innerHTML = '<div class="alert '+(r.sisa ? 'kuning' : 'hijau')+'">✓ '+r.diperbaiki+' laporan diperbaiki.'+
+      (r.sisa ? ' '+r.sisa+' laporan belum bisa ditebak — pilih RHK lewat Rekap → Edit:<ul style="margin:6px 0 0 18px">'+
+        r.contohSisa.map(x => '<li>'+esc(x.nama)+' · '+esc(fmtTgl(x.tanggal))+' · '+esc(x.judul)+'</li>').join('')+'</ul>' : ' Semua laporan sudah ber-RHK.')+'</div>';
+    await segarkan();
+  }
+  async function simpanProfilBos(){
+    try{ await jalan('Menyimpan…', () => api('superSimpanProfil', { nama:$('bsNama').value, jabatan:$('bsJabatan').value, nip:$('bsNip').value })); }catch(e){ return; }
+    await segarkan(); aturPeran(); isiProfil(); toast('Profil Big Bos tersimpan');
+  }
+  async function lihatTokenAdmin(){
+    let r; try{ r = await jalan('Memuat…', () => api('superTokenAdmin')); }catch(e){ return; }
+    $('bsTokAdm').textContent = r.token || '(belum ada)';
+  }
+  async function resetTokenAdmin(){
+    if (!confirm('Buat token baru untuk Katimkab?\nToken lama langsung tidak berlaku — berikan token baru ke Katimkab.')) return;
+    let r; try{ r = await jalan('Membuat token…', () => api('superGantiTokenAdmin', '')); }catch(e){ return; }
+    $('bsTokAdm').textContent = r.token; toast('Token Katimkab baru: ' + r.token);
   }
   MUAT.atur = () => {
     const s = A.init.pengaturan;
@@ -1220,29 +1480,29 @@ async function drawLap(ctx,l,X){
     await segarkan(); toast('Kalender tersimpan');
   }
   async function simpanProfil(){
-    try{ await jalan('Menyimpan…', () => api('adminSimpanProfil', { nama:$('aNama').value, nip:$('aNip').value })); }catch(e){ return; }
-    await segarkan(); isiProfil(); toast('Profil tersimpan');
+    let r; try{ r = await jalan('Menyimpan…', () => api('adminSimpanProfil', { nama:$('aNama').value, nip:$('aNip').value, gmail:$('aGmail').value, tempat:$('aTempat').value, kecamatan:$('aKec').value })); }catch(e){ return; }
+    await segarkan(); isiProfil(); toast(r.dibagikan ? 'Profil tersimpan — folder Drive dibagikan ke Gmail Katimkab' : 'Profil tersimpan');
   }
   async function gantiToken(){
     const t = $('aToken').value.trim().toUpperCase();
-    if (!confirm('Ganti token admin menjadi '+t+'?\nCatat baik-baik — token lama tidak berlaku lagi.')) return;
+    if (!confirm('Ganti token '+(A.super?'Big Bos':'admin')+' menjadi '+t+'?\nCatat baik-baik — token lama tidak berlaku lagi.')) return;
     try{ await jalan('Menyimpan…', () => api('adminGantiToken', t)); }catch(e){ return; }
     A.token = t; try{ (localStorage.getItem('rhk_token') ? localStorage : sessionStorage).setItem('rhk_token', t); }catch(e){}
-    $('aToken').value = ''; toast('Token admin diganti');
+    $('aToken').value = ''; toast('Token diganti');
   }
 
   // ================= MULAI =================
   (async function(){
     A.token = ambilToken();
     if (!A.token) return keluar();
-    loader(true, 'Membuka panel admin…');
+    loader(true, 'Membuka panel…');
     try{
       const r = await api('login');   // login(token) — token sudah ditambahkan otomatis
-      if (!r.ok || r.role !== 'admin') return keluar();
+      if (!r.ok || (r.role !== 'admin' && r.role !== 'superadmin')) return keluar();
       A.init = await api('adminInit');
     }catch(e){ loader(false); document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif"><h3>Tidak bisa membuka panel admin</h3><p>'+esc(pesanErr(e))+'</p><p><a href="index.html">Kembali</a></p></div>'; return; }
     loader(false);
-    aturBadge(); isiProfil();
+    aturPeran(); aturBadge(); isiProfil();
     const awal = location.hash.slice(1);
     buka(MUAT[awal] ? awal : (A.init.jumlah.menunggu ? 'koreksi' : 'beranda'));
   })();
