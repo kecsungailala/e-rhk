@@ -295,6 +295,13 @@
     .br-lap td.bd-foto img{width:84px;height:62px}
     .bd-kal .d.kini{background:var(--accent-soft);border-color:var(--accent)}
     .bd-leg em.w-kini{background:var(--accent-soft);border-color:var(--accent)}
+    /* pratinjau PDF di panel Edit */
+    .e-prat{border:1.5px solid #B7CB82;border-radius:12px;background:#F8F9F4;padding:10px;margin:4px 0 14px}
+    .e-prat-kepala{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-bottom:8px}
+    .e-prat-kepala .btn{margin-left:auto}
+    .e-prat-ket{flex-basis:100%;font-size:12px;color:var(--primary-dark)}
+    .e-prat iframe{width:100%;height:72vh;min-height:420px;border:1px solid var(--border);border-radius:8px;background:#fff}
+    .e-prat-aksi{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
   </style>
 </head>
 <body>
@@ -898,12 +905,27 @@ async function drawLap(ctx,l,X){
   }
 
   // ================= DETAIL =================
-  function bukaPanel(html){ $('panelIsi').innerHTML = html; $('mPanel').classList.remove('hidden'); $('panelIsi').scrollTop = 0; }
-  function tutupPanel(){ $('mPanel').classList.add('hidden'); $('panelIsi').innerHTML = ''; }
-  $('mPanel').addEventListener('click', e => { if (e.target.id === 'mPanel') tutupPanel(); });
-  function bukaKecil(html){ $('kecilIsi').innerHTML = html; $('mKecil').classList.remove('hidden'); }
+  function bukaPanel(html){ $('panelIsi').innerHTML = html; $('mPanel').classList.remove('hidden'); $('panelIsi').scrollTop = 0; A.panelUbah = false; }
+  function tutupPanel(){ $('mPanel').classList.add('hidden'); $('panelIsi').innerHTML = ''; A.panelUbah = false; if (A.prat && A.prat.url) URL.revokeObjectURL(A.prat.url); A.prat = null; }
+  function bukaKecil(html){ $('kecilIsi').innerHTML = html; $('mKecil').classList.remove('hidden'); A.kecilUbah = false; }
   function tutupKecil(){ $('mKecil').classList.add('hidden'); }
-  $('mKecil').addEventListener('click', e => { if (e.target.id === 'mKecil') tutupKecil(); });
+  // isian yang berubah → konfirmasi sebelum ditutup lewat ketuk di luar
+  $('panelIsi').addEventListener('input', () => { A.panelUbah = true; if (A.prat) basiPratinjau(); });
+  $('panelIsi').addEventListener('change', () => { A.panelUbah = true; if (A.prat) basiPratinjau(); });
+  $('kecilIsi').addEventListener('input', () => { A.kecilUbah = true; });
+  // ketuk di luar layar mengambang = tutup (hanya bila tekan DAN lepas di area gelap)
+  let tekanLuar = null;
+  document.addEventListener('pointerdown', e => { tekanLuar = e.target; }, true);
+  $('mPanel').addEventListener('click', e => {
+    if (e.target.id !== 'mPanel' || tekanLuar !== e.target) return;
+    if (A.panelUbah && !confirm('Tutup tanpa menyimpan? Perubahan yang belum disimpan akan hilang.')) return;
+    tutupPanel();
+  });
+  $('mKecil').addEventListener('click', e => {
+    if (e.target.id !== 'mKecil' || tekanLuar !== e.target) return;
+    if (A.kecilUbah && !confirm('Tutup tanpa menyimpan?')) return;
+    tutupKecil();
+  });
   document.addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!$('mKecil').classList.contains('hidden')) tutupKecil(); else tutupPanel(); } });
   document.addEventListener('click', e => {
     const kecil = e.target.closest('.bd-foto img'); if (kecil && kecil.src) return perbesarFoto(kecil);
@@ -995,7 +1017,10 @@ async function drawLap(ctx,l,X){
       '<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn garis kecil" type="button" id="eTambahFoto" onclick="$(\'eFotoFile\').dataset.i=\'baru\';$(\'eFotoFile\').click()">＋ Tambah foto</button></div>'+
       '<input type="file" id="eFotoFile" accept="image/*" class="hidden">'+
       '<div id="eAlert" class="alert merah hidden"></div>'+
-      '<div class="tombol-bawah"><button class="btn" onclick="simpanUbah(false)">Simpan</button>'+(l.status === 'Menunggu koreksi' && bolehSetujui(l) ? '<button class="btn toska" onclick="simpanUbah(true)">Simpan &amp; Setujui</button>' : '')+
+      '<div id="ePrat" class="e-prat hidden"></div>'+
+      '<div class="tombol-bawah"><button class="btn" onclick="simpanUbah(false)">Simpan</button>'+
+        (l.status === 'Menunggu koreksi' ? '<button class="btn garis" onclick="simpanUbah(\'pratinjau\')">👁 Pratinjau PDF</button>' : '')+
+        (l.status === 'Menunggu koreksi' && bolehSetujui(l) ? '<button class="btn toska" id="eSetuju" onclick="simpanUbah(true)">Simpan &amp; Setujui</button>' : '')+
       '<button class="btn garis" onclick="tutupPanel()">Batal</button></div>';
     bukaPanel(s);
     if (!p2){ isiTplEdit(l.tplId, !l.tplId); $('eRhk').addEventListener('change', () => isiTplEdit('', true)); }
@@ -1086,6 +1111,48 @@ async function drawLap(ctx,l,X){
     pasang();
     if (perlu.length) ambilFotoAdmin(perlu).then(r => { Object.assign(c, r); A.ed.cacheFoto = c; pasang(); }).catch(() => {});
   }
+  /** Pratinjau PDF di dalam panel Edit: isian disimpan dulu, PDF disusun persis seperti saat disetujui. */
+  async function tampilPratinjau(r){
+    const l = A.ed.l;
+    let p, baru;
+    try{
+      await jalan('Menyusun pratinjau PDF…', async () => {
+        baru = await api('adminLaporan', l.id);       // foto baru sudah tersimpan → pakai ID tersimpan untuk penyimpanan berikutnya
+        p = await susunPdf(l.id);
+      });
+    }catch(e){ return; }
+    A.ed.l = baru; A.ed.foto = baru.fotoIds.map((f, i) => ({ lama:f, ket:baru.fotoKet[i]||'' })); A.ed.scan = null;
+    if ($('eHapusScan')) $('eHapusScan').checked = false;
+    gambarFotoEdit();
+    if (A.prat && A.prat.url) URL.revokeObjectURL(A.prat.url);
+    const url = URL.createObjectURL(new Blob([p.bytes], { type:'application/pdf' }));
+    A.prat = { bytes: p.bytes, nama: p.nama, url: url, basi: false };
+    A.panelUbah = false;
+    const bisa = baru.status === 'Menunggu koreksi' && bolehSetujui(baru);
+    $('ePrat').innerHTML = '<div class="e-prat-kepala"><b>👁 Pratinjau PDF</b> <span class="kec">'+esc(p.nama)+'.pdf</span>'+
+      '<span class="e-prat-ket" id="ePratKet">✓ Perubahan tersimpan · PDF ini yang akan masuk ke Drive bila disetujui</span>'+
+      '<a class="btn garis kecil" target="_blank" href="'+url+'">Buka di tab baru</a></div>'+
+      '<iframe src="'+url+'#view=FitH" title="Pratinjau PDF"></iframe>'+
+      (bisa ? '<div class="e-prat-aksi"><button class="btn toska" onclick="setujuiPratinjau()">✓ Sudah sesuai — Setujui sekarang</button><span class="catatan">Ada yang perlu dibenahi? Ubah isian di atas, lalu klik Pratinjau PDF lagi.</span></div>' : '');
+    $('ePrat').classList.remove('hidden');
+    $('ePrat').scrollIntoView({ behavior:'smooth', block:'start' });
+    if ($('eSetuju')) $('eSetuju').textContent = 'Setujui (sesuai pratinjau)';
+  }
+  function basiPratinjau(){
+    if (!A.prat || A.prat.basi) return;
+    A.prat.basi = true;
+    if ($('ePratKet')) $('ePratKet').innerHTML = '⚠️ Isian berubah setelah pratinjau — klik <b>Pratinjau PDF</b> lagi, atau <b>Simpan &amp; Setujui</b> untuk menyimpan perubahan lalu membuat PDF baru';
+    const b = document.querySelector('#ePrat .e-prat-aksi .btn'); if (b) b.disabled = true;
+    if ($('eSetuju')) $('eSetuju').textContent = 'Simpan & Setujui';
+  }
+  /** Setujui dengan PDF yang sudah dipratinjau (tidak disusun ulang). */
+  async function setujuiPratinjau(){
+    const l = A.ed.l, pr = A.prat; if (!pr || pr.basi) return;
+    try{ await jalan('Menyetujui…', () => api('adminSimpanPdf', l.id, keB64(pr.bytes))); }catch(e){ return; }
+    tutupPanel();
+    toast('✓ Disetujui — PDF masuk folder Drive member');
+    await segarkan(); MUAT[A.view] && MUAT[A.view]();
+  }
   async function simpanUbah(lalSetujui){
     const l = A.ed.l, al = $('eAlert'); al.classList.add('hidden');
     const v = id => ($(id) || {}).value || '';
@@ -1105,9 +1172,13 @@ async function drawLap(ctx,l,X){
           scanId: A.ed.scan || '', hapusScan: !!($('eHapusScan') && $('eHapusScan').checked) });
       } else Object.assign(d, { tplId: v('eTpl'), keterangan: v('eKet'), isi: v('eIsi') });
     }
+    // sudah dipratinjau dan isian tidak berubah → langsung setujui dengan PDF yang tadi dilihat
+    if (lalSetujui === true && A.prat && !A.prat.basi){ await setujuiPratinjau(); return; }
+    const pratinjauSaja = lalSetujui === 'pratinjau';
     let r;
     try{ r = await jalan('Menyimpan…', () => api('adminSimpanLaporan', d)); }
     catch(e){ al.textContent = pesanErr(e); al.classList.remove('hidden'); al.scrollIntoView({ behavior:'smooth' }); return; }
+    if (pratinjauSaja){ await tampilPratinjau(r); return; }
     tutupPanel();
     if (lalSetujui || r.perluPdf){ await setujui([l.id], r.perluPdf && !lalSetujui); return; }
     toast('Perubahan disimpan'); await segarkan(); MUAT[A.view] && MUAT[A.view]();

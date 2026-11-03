@@ -1734,6 +1734,7 @@
       aturMode(false);
     }
     hitungDurasi(); tulisLokasi(); aturSakelarSimpan(); tulisSimpulan();
+    S.formUbah = false;
     buka('modalForm');
   }
   function editLap(id){ bukaForm(id); }
@@ -2665,6 +2666,25 @@
     }catch(err){ toast(pesanErr(err), true); }
     finally{ loader(false); }
   }
+
+  // ---------- layar mengambang: ketuk di luar kotak = tutup (form yang sudah diisi minta konfirmasi dulu) ----------
+  $('formLap').addEventListener('input', () => { S.formUbah = true; });
+  $('formLap').addEventListener('change', () => { S.formUbah = true; });
+  const TUTUP_LUAR = {
+    modalForm: () => { if ((S.formUbah || Object.keys(S.slot || {}).length) && !confirm('Tutup form? Isian yang belum dikirim akan hilang.')) return; batalForm(); },
+    modalBanyak: () => { if (S.banyak && S.banyak.items.length && !confirm('Tutup Upload Banyak? Foto yang belum dikirim akan hilang.')) return; tutupBanyak(); },
+    modalFoto: () => tutup('modalFoto'),
+    modalKpm: () => tutup('modalKpm'),
+    modalPesta: () => tutupPesta()
+  };
+  // hanya bila tekan DAN lepas di area gelap (menyeret dari dalam kotak tidak menutup)
+  let tekanLuar = null;
+  document.addEventListener('pointerdown', e => { tekanLuar = e.target.classList && e.target.classList.contains('modal') ? e.target : null; }, true);
+  document.addEventListener('click', e => {
+    const m = e.target.classList && e.target.classList.contains('modal') ? e.target : null;
+    if (m && m === tekanLuar && TUTUP_LUAR[m.id] && !m.classList.contains('hidden')) TUTUP_LUAR[m.id]();
+    tekanLuar = null;
+  });
 
   /** Siapkan foto untuk slot n (kamera: diberi cap, galeri: polos), tampilkan, lalu unggah di latar belakang. */
   async function gambarSlot(n){
