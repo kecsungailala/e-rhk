@@ -302,6 +302,10 @@
     .e-prat-ket{flex-basis:100%;font-size:12px;color:var(--primary-dark)}
     .e-prat iframe{width:100%;height:72vh;min-height:420px;border:1px solid var(--border);border-radius:8px;background:#fff}
     .e-prat-aksi{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+    .seg-pdf{display:flex;gap:8px;flex-wrap:wrap}
+    .seg-pdf label{display:flex;gap:7px;align-items:center;border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;font-weight:600;margin:0;cursor:pointer}
+    .seg-pdf label:has(input:checked){border-color:var(--primary);background:#EEF2E3}
+    .seg-pdf input{width:auto;margin:0}
   </style>
 </head>
 <body>
@@ -1529,12 +1533,13 @@ async function drawLap(ctx,l,X){
     $('mTabel').innerHTML = '<div class="tabel-wrap"><table class="tb"><thead><tr><th class="no">No</th><th>Nama</th><th>Token</th><th>Gmail &amp; folder Drive</th><th>Kecamatan</th><th>TTD</th><th>Status</th><th></th></tr></thead><tbody>'+
       list.map((m, i) => '<tr><td class="no">'+(i+1)+'</td><td><b>'+esc(m.nama)+'</b><div class="kec">'+(m.nip ? 'NIP '+esc(m.nip) : 'NIP belum diisi')+(m.sumber && m.sumber !== 'E-RHK' ? ' · '+esc(m.sumber) : '')+'</div></td>'+
         '<td><code style="font-size:13px;letter-spacing:1px">'+esc(m.token)+'</code> <button class="btn garis kecil" onclick="salin(\''+esc(m.token)+'\')">Salin</button></td>'+
-        '<td>'+(m.gmail ? esc(m.gmail)+'<div class="kec">'+(m.dibagikan ? '✓ folder dibagikan' : '<span style="color:var(--merah)">belum dibagikan</span>')+(m.folder ? ' · <a target="_blank" href="'+esc(m.folder)+'">buka folder</a>' : '')+'</div>' : '<span class="kec">Gmail belum diisi</span>')+'</td>'+
+        '<td>'+(m.caraPdf === 'folder' ? '📁 Folder milik member<div class="kec">✓ PDF dikirim ke folder ini · <a target="_blank" href="'+esc(m.folderLink)+'">buka folder</a></div>'
+          : m.gmail ? esc(m.gmail)+'<div class="kec">'+(m.dibagikan ? '✓ folder dibagikan' : '<span style="color:var(--merah)">belum dibagikan</span>')+(m.folder ? ' · <a target="_blank" href="'+esc(m.folder)+'">buka folder</a>' : '')+'</div>' : '<span class="kec">Gmail / link folder belum diisi</span>')+'</td>'+
         '<td>'+esc(m.kecamatan || '-')+'</td>'+
         '<td>'+(m.adaTtd ? '<span class="st ok">'+(m.ttdJenis === 'qr' ? 'QR' : 'Gambar')+'</span>' : '<span class="st tunggu">Belum</span>')+'</td>'+
         '<td>'+(m.aktif ? '<span class="st ok">Aktif</span>' : '<span class="st hapus">Nonaktif</span>')+'</td>'+
         '<td><div class="aksi"><button class="btn garis kecil" onclick="bukaMember(\''+m.id+'\')">Edit</button><button class="btn garis kecil" onclick="kartuToken(\''+m.id+'\')">Kartu</button><button class="btn garis kecil" onclick="menuTtd(\''+m.id+'\')">TTD</button>'+
-          (m.gmail && !m.dibagikan ? '<button class="btn garis kecil" onclick="bagikanUlang(\''+m.id+'\')">Bagikan</button>' : '')+
+          (m.caraPdf !== 'folder' && m.gmail && !m.dibagikan ? '<button class="btn garis kecil" onclick="bagikanUlang(\''+m.id+'\')">Bagikan</button>' : '')+
           '<button class="btn merah kecil" onclick="hapusMember(\''+m.id+'\')">Hapus</button></div></td></tr>').join('')+'</tbody></table></div>';
   };
   $('mCari').addEventListener('input', () => MUAT.member());
@@ -1545,7 +1550,12 @@ async function drawLap(ctx,l,X){
     bukaKecil('<div class="panel-kepala"><h3>'+(id ? 'Edit member' : 'Tambah member')+'</h3><button class="x" onclick="tutupKecil()">×</button></div>'+
       '<div class="fg"><label>Nama lengkap + gelar *</label><input id="mfNama" value="'+esc(m.nama)+'" placeholder="Contoh: SRI WAHYUNI, S.Pd"></div>'+
       '<div class="g2"><div class="fg"><label>NIP</label><input id="mfNip" inputmode="numeric" value="'+esc(m.nip)+'"></div><div class="fg"><label>Tanggal lahir</label><input type="date" id="mfLahir" value="'+esc(m.lahir)+'"></div></div>'+
-      '<div class="fg"><label>Gmail <span class="catatan">— folder PDF di Drive dibagikan ke alamat ini</span></label><input id="mfGmail" type="email" value="'+esc(m.gmail)+'" placeholder="nama@gmail.com"></div>'+
+      '<div class="fg"><label>Cara menerima PDF laporan</label><div class="seg-pdf">'+
+        '<label><input type="radio" name="mfCara" value="gmail"'+(m.caraPdf !== 'folder' ? ' checked' : '')+'> 📧 Lewat Gmail</label>'+
+        '<label><input type="radio" name="mfCara" value="folder"'+(m.caraPdf === 'folder' ? ' checked' : '')+'> 📁 Link folder milik member</label></div></div>'+
+      '<div class="fg" id="mfBoxGmail"><label>Gmail <span class="catatan">— folder PDF di Drive E-RHK dibagikan ke alamat ini</span></label><input id="mfGmail" type="email" value="'+esc(m.gmail)+'" placeholder="nama@gmail.com"></div>'+
+      '<div class="fg hidden" id="mfBoxFolder"><label>Link folder Google Drive milik member</label><input id="mfFolder" value="'+esc(m.folderLink || '')+'" placeholder="https://drive.google.com/drive/folders/…">'+
+        '<div class="catatan" style="margin-top:6px">Minta member membuka folder itu di Google Drive → <b>Bagikan</b> → tambahkan <b>'+esc(A.init.akunServer || 'akun Google pemilik E-RHK')+'</b> sebagai <b>Editor</b>, lalu salin linknya ke sini. PDF yang disetujui masuk ke folder itu: TAHUN / BULAN / RHK.</div></div>'+
       '<div class="g2"><div class="fg"><label>Kecamatan tugas</label><input id="mfKec" list="mfKecList" value="'+esc(m.kecamatan)+'"><datalist id="mfKecList">'+kecs.map(k=>'<option value="'+esc(k)+'">').join('')+'</datalist></div>'+
       '<div class="fg"><label>Tempat pembuatan laporan</label><input id="mfTempat" value="'+esc(m.tempat)+'" placeholder="Contoh: Sungai Lala"></div></div>'+
       '<div class="fg"><label>Token login</label><div style="display:flex;gap:8px"><input id="mfToken" value="'+esc(m.token)+'" placeholder="kosong = dibuat otomatis" style="text-transform:uppercase;font-family:Consolas,monospace;letter-spacing:1px">'+
@@ -1553,14 +1563,16 @@ async function drawLap(ctx,l,X){
       '<label style="display:flex;gap:8px;align-items:center;font-weight:400;margin-bottom:12px"><input type="checkbox" id="mfAktif"'+(m.aktif?' checked':'')+'> Aktif (boleh login)</label>'+
       '<div id="mfAlert" class="alert merah hidden"></div>'+
       '<div style="display:flex;gap:8px"><button class="btn" onclick="simpanMember(\''+(id||'')+'\')">Simpan</button><button class="btn garis" onclick="tutupKecil()">Batal</button></div>');
+    const aturCara = () => { const f = (document.querySelector('[name=mfCara]:checked') || {}).value === 'folder'; $('mfBoxFolder').classList.toggle('hidden', !f); $('mfBoxGmail').classList.toggle('hidden', f); };
+    document.querySelectorAll('[name=mfCara]').forEach(r => r.addEventListener('change', aturCara)); aturCara();
   }
   async function simpanMember(id){
     const v = i => $(i).value;
     let r;
-    try{ r = await jalan('Menyimpan…', () => api('adminSimpanMember', { id:id, nama:v('mfNama'), nip:v('mfNip'), lahir:v('mfLahir'), gmail:v('mfGmail'), kecamatan:v('mfKec'), tempat:v('mfTempat'), token:v('mfToken'), aktif:$('mfAktif').checked })); }
+    try{ r = await jalan('Menyimpan…', () => api('adminSimpanMember', { id:id, nama:v('mfNama'), nip:v('mfNip'), lahir:v('mfLahir'), gmail:v('mfGmail'), caraPdf:(document.querySelector('[name=mfCara]:checked') || {}).value || 'gmail', folderLink:v('mfFolder'), kecamatan:v('mfKec'), tempat:v('mfTempat'), token:v('mfToken'), aktif:$('mfAktif').checked })); }
     catch(e){ $('mfAlert').textContent = pesanErr(e); $('mfAlert').classList.remove('hidden'); return; }
     tutupKecil();
-    toast(r.member.gmail ? (r.dibagikan ? 'Tersimpan · folder Drive dibagikan ke '+r.member.gmail : 'Tersimpan, tapi folder gagal dibagikan — periksa Gmail') : 'Tersimpan · token '+r.member.token);
+    toast(r.member.caraPdf === 'folder' ? 'Tersimpan · PDF akan masuk ke folder milik member' : r.member.gmail ? (r.dibagikan ? 'Tersimpan · folder Drive dibagikan ke '+r.member.gmail : 'Tersimpan, tapi folder gagal dibagikan — periksa Gmail') : 'Tersimpan · token '+r.member.token);
     await segarkan(); MUAT.member();
   }
   // ---- Kartu token: gambar PNG per member (nama + token), dibuat di browser dari data asli ----
@@ -1579,7 +1591,9 @@ async function drawLap(ctx,l,X){
     kata.forEach(k => { const c = b ? b + ' ' + k : k; if (x.measureText(c).width > lebar && b){ baris.push(b); b = k; } else b = c; });
     if (b) baris.push(b); return baris;
   }
-  /** Kartu 1012×638 px (rasio kartu nama/ATM). */
+  /** Link halaman member (index.html) — dari alamat panel ini. */
+  function linkAplikasi(){ return 'https://s.id/E-RHK'; }
+  /** Kartu 1012×638 px (rasio kartu nama/ATM): nama, token, QR + link aplikasi. */
   async function gambarKartu(m){
     try{ await document.fonts.load('800 40px "Plus Jakarta Sans"'); }catch(e){}
     const W = 1012, H = 638, c = document.createElement('canvas'); c.width = W; c.height = H;
@@ -1594,26 +1608,43 @@ async function drawLap(ctx,l,X){
     const logo = await muatLogoKartu(); if (logo) x.drawImage(logo, 44, 27, 96, 96);
     x.fillStyle = '#FFFFFF'; x.font = '800 54px ' + F; x.textBaseline = 'alphabetic'; x.fillText('E-RHK', 160, 82);
     x.font = '600 23px ' + F; x.fillStyle = '#F4F9E6'; x.fillText('Laporan RHK Pendamping PKH', 162, 118);
+    // QR ke aplikasi (kanan atas)
+    const url = linkAplikasi(), QS = 168, qx = W - 60 - QS, qy = 184;
+    if (window.qrcode){
+      try{
+        const q = window.qrcode(0, 'M'); q.addData(url); q.make();
+        const n = q.getModuleCount(), sel = QS / (n + 2);
+        x.fillStyle = '#FFFFFF'; x.fillRect(qx, qy, QS, QS);
+        x.fillStyle = '#1F2A14';
+        for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) x.fillRect(qx + (k + 1) * sel, qy + (r + 1) * sel, Math.ceil(sel), Math.ceil(sel));
+        x.strokeStyle = '#D6D8D2'; x.lineWidth = 2; x.strokeRect(qx, qy, QS, QS);
+        x.fillStyle = '#5E6358'; x.font = '700 15px ' + F; x.textAlign = 'center'; x.fillText('Pindai untuk membuka', qx + QS / 2, qy + QS + 22); x.textAlign = 'left';
+      }catch(e){}
+    }
     // nama, NIP, kecamatan
     x.fillStyle = '#5E6358'; x.font = '700 20px ' + F; x.fillText('NAMA', 60, 218);
     x.fillStyle = '#1F2A14'; x.font = '800 40px ' + F;
-    const nama = potongBaris(x, m.nama || '-', W - 120).slice(0, 2);
+    const nama = potongBaris(x, m.nama || '-', W - 120 - QS - 30).slice(0, 2);
     nama.forEach((b, i) => x.fillText(b, 60, 266 + i * 46));
     let y = 266 + (nama.length - 1) * 46 + 40;
     x.font = '600 22px ' + F; x.fillStyle = '#5E6358';
     const ket = [m.nip ? 'NIP ' + m.nip : '', m.kecamatan ? 'Kec. ' + m.kecamatan : ''].filter(Boolean).join('   ·   ');
     if (ket){ x.fillText(ket, 60, y); y += 20; }
     // token
-    const ty = Math.max(y + 22, 372);
+    const ty = Math.max(y + 22, qy + QS + 40);
     x.fillStyle = '#FFE8D1'; kotak(60, ty, W - 120, 132, 22); x.fill();
     x.strokeStyle = '#F28C28'; x.lineWidth = 4; kotak(60, ty, W - 120, 132, 22); x.stroke();
     x.fillStyle = '#8A4510'; x.font = '700 20px ' + F; x.fillText('TOKEN LOGIN', 92, ty + 40);
+    x.font = '600 16px ' + F; x.textAlign = 'right'; x.fillText('Rahasia — jangan dibagikan', W - 92, ty + 40); x.textAlign = 'left';
     x.fillStyle = '#1F2A14'; x.font = '800 64px "Consolas", "Courier New", monospace';
     const tok = String(m.token || '').split('').join(' ');
     let uk = 64; while (x.measureText(tok).width > W - 190 && uk > 30){ uk -= 4; x.font = '800 ' + uk + 'px "Consolas", "Courier New", monospace'; }
     x.fillText(tok, 92, ty + 108);
     // bawah
-    x.fillStyle = '#5E6358'; x.font = '600 18px ' + F; x.fillText('Jangan bagikan token ini ke orang lain.', 60, H - 52);
+    x.fillStyle = '#1F2A14'; x.font = '700 19px ' + F;
+    let tl = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    while (x.measureText(tl).width > W - 420 && tl.length > 12) tl = tl.slice(0, -2);
+    x.fillStyle = '#4F6A17'; x.fillText(tl, 60, H - 50);
     x.fillStyle = '#4F6A17'; x.font = '800 24px ' + F; x.textAlign = 'right'; x.fillText('Jayengcode.vx.com', W - 60, H - 50); x.textAlign = 'left';
     x.strokeStyle = '#D6D8D2'; x.lineWidth = 2; kotak(1, 1, W - 2, H - 2, 35); x.stroke();
     return c;
@@ -1629,7 +1660,16 @@ async function drawLap(ctx,l,X){
     const c = await gambarKartu(m), url = c.toDataURL('image/png');
     bukaKecil('<div class="panel-kepala"><h3>Kartu token</h3><button class="x" onclick="tutupKecil()">×</button></div>'+
       '<img src="'+url+'" alt="Kartu token '+esc(m.nama)+'" style="width:100%;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.12);margin-bottom:12px">'+
-      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn toska" onclick="unduhKartu(\''+m.id+'\')">⤓ Unduh gambar</button><button class="btn garis" onclick="tutupKecil()">Tutup</button></div>');
+      '<div class="catatan" style="margin-bottom:10px">Gambar tidak bisa diklik. Supaya link bisa langsung diklik, kirim gambar kartu bersama pesan dari tombol <b>Salin pesan WhatsApp</b> (QR di kartu tetap bisa dipindai).</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn toska" onclick="unduhKartu(\''+m.id+'\')">⤓ Unduh gambar</button><button class="btn garis" onclick="salinPesanKartu(\''+m.id+'\')">📋 Salin pesan WhatsApp</button><button class="btn garis" onclick="tutupKecil()">Tutup</button></div>');
+  }
+  function pesanKartu(m){
+    return 'Assalamualaikum, '+m.nama+'.\n\nAkun E-RHK Anda:\nToken: *'+m.token+'*\nBuka aplikasi: '+linkAplikasi()+'\n\nKetik token di halaman login, centang "Ingat saya", lalu tekan LOG-IN. Jangan bagikan token ini ke orang lain.\n\nSalam PKH SIP!';
+  }
+  function salinPesanKartu(id){
+    const m = A.init.member.find(x => x.id === id); if (!m) return;
+    const t = pesanKartu(m);
+    navigator.clipboard.writeText(t).then(() => toast('Pesan disalin — tempel di WhatsApp bersama gambar kartu'), () => prompt('Salin pesan ini:', t));
   }
   async function unduhKartu(id){ const m = A.init.member.find(x => x.id === id); if (m) await unduhKanvas(await gambarKartu(m), namaFileKartu(m)); }
   async function unduhSemuaKartu(){
