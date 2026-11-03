@@ -1,6 +1,6 @@
 // Service worker E-RHK: aplikasi bisa di-install dan tetap terbuka tanpa sinyal.
 // Halaman selalu diambil terbaru dari internet; salinan lama hanya dipakai saat offline.
-const CACHE = 'erhk-v10';
+const CACHE = 'erhk-v11';
 const FILE = ['./', './index.html', './admin.html', './manifest.webmanifest', './icon-192.png', './icon-512.png',
               './icon-maskable-512.png', './apple-touch-icon.png', './favicon.png', './pdf-lib.min.js'];
 

@@ -715,13 +715,10 @@ async function drawLap(ctx,l,X){
     const m = (BR.data && BR.data.rekap.find(x => x.id === BD.id)) || A.init.member.find(x => x.id === BD.id) || {};
     $('bdNama').textContent = '📌 ' + (m.nama || (BD.id === 'ADMIN' ? A.init.profil.nama || 'Katimkab' : ''));
     if (!diam) $('bdDaftar').innerHTML = '<div class="catatan" style="padding:20px">⏳ Memuat laporan…</div>';
-    const semua = [], f = BD.id === 'ADMIN' ? { pemilik:'katimkab' } : { memberId: BD.id, jenis:'bukan-supervisi' };
-    try{
-      for (let h = 0; ; h++){
-        const d = await api('adminDaftar', Object.assign({ bulan: $('bdBulan').value, urut: 'baru', halaman: h, per: 200 }, f));
-        semua.push(...d.laporan); if ((h + 1) * 200 >= d.total) break;
-      }
-    }catch(e){ if (!diam) $('bdDaftar').innerHTML = '<div class="alert merah">'+esc(pesanErr(e))+'</div>'; return; }
+    // satu permintaan: semua laporan member sebulan + foto kecil yang sudah siap di server
+    let semua;
+    try{ const d = await api('adminDetailMember', BD.id, $('bdBulan').value); semua = d.laporan; Object.assign(fotoKecil, d.thumb || {}); }
+    catch(e){ if (!diam) $('bdDaftar').innerHTML = '<div class="alert merah">'+esc(pesanErr(e))+'</div>'; return; }
     $('bdSub').textContent = (m.nip ? 'NIP. '+m.nip+' · ' : '')+fmtBulan($('bdBulan').value)+' · '+semua.length+' laporan';
     BD.laporan = semua; gambarDetail();
   }
@@ -771,19 +768,32 @@ async function drawLap(ctx,l,X){
       }).join('')+'</tbody></table></div>';
     muatFotoDetail();
   }
-  // foto dimuat bertahap (8 per panggilan) mengikuti urutan baris — kolom foto ada di kanan tabel yang bisa digeser
-  const fotoDetail = {};
+  // foto kecil (thumbnail ±200 px) untuk tabel Beranda: 3 permintaan sekaligus, 12 foto per permintaan.
+  // Foto asli dimuat hanya saat foto diperbesar / Lihat / Edit / PDF.
+  const fotoKecil = {};
   async function muatFotoDetail(){
     const imgs = [...document.querySelectorAll('#bdDaftar img[data-f]')];
-    const pasang = () => imgs.forEach(im => { if (fotoDetail[im.dataset.f]) im.src = fotoDetail[im.dataset.f]; });
+    const pasang = () => imgs.forEach(im => { const u = fotoKecil[im.dataset.f]; if (u && im.src !== u) im.src = u; });
     pasang();
-    const perlu = [...new Set(imgs.map(im => im.dataset.f))].filter(f => !(f in fotoDetail) && !/^https?:/.test(f)).slice(0, 80);
+    const perlu = [...new Set(imgs.map(im => im.dataset.f))].filter(f => !(f in fotoKecil) && !/^https?:/.test(f)).slice(0, 120);
     const giliran = (BD.giliran = (BD.giliran || 0) + 1);
-    for (let i = 0; i < perlu.length; i += 8){
-      if (giliran !== BD.giliran) return;   // daftar sudah berganti (tanggal / bulan lain)
-      try{ Object.assign(fotoDetail, await api('adminFoto', perlu.slice(i, i + 8))); }catch(e){ break; }
-      pasang();
-    }
+    const kelompok = []; for (let i = 0; i < perlu.length; i += 12) kelompok.push(perlu.slice(i, i + 12));
+    const pekerja = async () => {
+      while (kelompok.length){
+        if (giliran !== BD.giliran) return;   // daftar sudah berganti (tanggal / bulan lain)
+        const k = kelompok.shift();
+        try{ Object.assign(fotoKecil, await api('adminThumb', k)); }catch(e){ return; }
+        pasang();
+      }
+    };
+    await Promise.all([pekerja(), pekerja(), pekerja()]);
+  }
+  /** Foto kecil diketuk → tampil langsung, lalu diganti foto asli setelah termuat. */
+  const fotoBesar = {};
+  async function perbesarFoto(im){
+    $('layarImg').src = im.src; $('layar').classList.remove('hidden');
+    const f = im.dataset.f; if (!f || /^https?:/.test(f)) return;
+    try{ if (!fotoBesar[f]) Object.assign(fotoBesar, await api('adminFoto', [f])); if (fotoBesar[f] && $('layarImg').src === im.src) $('layarImg').src = fotoBesar[f]; }catch(e){}
   }
 
   // ================= TABEL LAPORAN (dipakai Koreksi, Rekap, Supervisi, Sampah) =================
@@ -895,7 +905,10 @@ async function drawLap(ctx,l,X){
   function tutupKecil(){ $('mKecil').classList.add('hidden'); }
   $('mKecil').addEventListener('click', e => { if (e.target.id === 'mKecil') tutupKecil(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!$('mKecil').classList.contains('hidden')) tutupKecil(); else tutupPanel(); } });
-  document.addEventListener('click', e => { const im = e.target.closest('.foto-grid img, .bd-foto img'); if (im && im.src){ $('layarImg').src = im.src; $('layar').classList.remove('hidden'); } });
+  document.addEventListener('click', e => {
+    const kecil = e.target.closest('.bd-foto img'); if (kecil && kecil.src) return perbesarFoto(kecil);
+    const im = e.target.closest('.foto-grid img'); if (im && im.src){ $('layarImg').src = im.src; $('layar').classList.remove('hidden'); }
+  });
 
   async function ambilFotoAdmin(ids){
     const hasil = {}, perlu = ids.filter(f => f && !/^https?:/.test(f));
