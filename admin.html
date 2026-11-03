@@ -306,6 +306,15 @@
     .seg-pdf label{display:flex;gap:7px;align-items:center;border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;font-weight:600;margin:0;cursor:pointer}
     .seg-pdf label:has(input:checked){border-color:var(--primary);background:#EEF2E3}
     .seg-pdf input{width:auto;margin:0}
+    /* RHK 9 gabungan */
+    .baris-g9 td{background:#FAFBF6}
+    .g9-bar{height:6px;border-radius:6px;background:#E7E9E2;overflow:hidden;margin:5px 0 3px;max-width:260px}
+    .g9-bar i{display:block;height:100%;background:var(--accent)}
+    .g9-bar i.ok{background:var(--primary)}
+    .g9-foto{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+    .g9-foto figure{margin:0;border:1px solid var(--border);border-radius:10px;padding:6px;background:var(--card)}
+    .g9-foto img{width:100%;height:110px;object-fit:cover;border-radius:7px;background:#EEF0EA;display:block;cursor:zoom-in}
+    .g9-foto figcaption{font-size:12px;margin-top:5px}
   </style>
 </head>
 <body>
@@ -781,7 +790,7 @@ async function drawLap(ctx,l,X){
           Array.from({ length:nFoto }, (_, j) => { const f = (l.foto || [])[j]; return '<td class="bd-foto">'+(f ? '<img data-f="'+esc(f)+'" alt="foto" loading="lazy">' : '<span class="kec">–</span>')+'</td>'; }).join('')+
           '<td>'+chipStatus(l)+'</td><td><div class="aksi" style="flex-wrap:nowrap">'+
             '<button class="btn garis kecil" onclick="lihat(\''+l.id+'\')">Lihat</button>'+(bolehUbah(l) ? '<button class="btn garis kecil" onclick="ubah(\''+l.id+'\')">Edit</button>' : '')+
-            (l.status === 'Disetujui' ? linkPdf(l) : bolehSetujui(l) ? '<button class="btn toska kecil" onclick="setujui([\''+l.id+'\'])">Setujui</button>' : chipBos)+
+            (l.status === 'Disetujui' ? linkPdf(l) : bolehSetujui(l) ? '<button class="btn toska kecil" onclick="setujui([\''+idSetuju(l)+'\'])">Setujui</button>' : chipBos)+
           '</div></td></tr>';
       }).join('')+'</tbody></table></div>';
     muatFotoDetail();
@@ -822,7 +831,46 @@ async function drawLap(ctx,l,X){
   /**
    * kunci = nama tabel (untuk pilihan & halaman); list = {total, laporan}; opsi = {aksi(l), massal:[[label, fn, kelas]], wadah}
    */
+  // ---- RHK 9: satu laporan per member per bulan (gabungan semua foto) ----
+  const isRhk9 = l => l && l.jenis === 'umum' && (String(l.rhkNo) === '9' || /^RHK\s*9\b/i.test(l.rhk || ''));
+  const kunciRhk9 = l => 'G9|' + l.memberId + '|' + String(l.tanggal).slice(0, 7);
+  /** ID untuk tombol Setujui: entri RHK 9 → grup bulanannya. */
+  const idSetuju = l => isRhk9(l) ? kunciRhk9(l) : l.id;
+  A.grup9 = A.grup9 || {};
+  /** Ganti entri RHK 9 di satu halaman dengan satu baris gabungan per member per bulan. */
+  function gabungRhk9(laporan, ring){
+    const keluar = [], sudah = {};
+    laporan.forEach(l => {
+      if (!isRhk9(l) || !ring) return keluar.push(l);
+      const k = kunciRhk9(l), info = ring[l.memberId + '|' + String(l.tanggal).slice(0, 7)];
+      if (!info) return keluar.push(l);
+      A.grup9[k] = Object.assign({ memberId: l.memberId, bulan: String(l.tanggal).slice(0, 7), nama: l.nama, rhk: l.rhk, judul: l.judul, tempat: l.tempat, contohId: l.id }, info);
+      if (sudah[k]) return;
+      sudah[k] = 1;
+      keluar.push({ grup9: k, id: k, nama: l.nama, rhk: l.rhk, memberId: l.memberId, tanggal: info.awal || l.tanggal });
+    });
+    return keluar;
+  }
+  function barisRhk9(k, no, pilih, massal, kunci){
+    const g = A.grup9[k], kurang = Math.max(0, (g.target || 0) - g.jumlah), semua = g.disetujui === g.jumlah;
+    const status = semua ? '<span class="st ok">Disetujui</span>' : kurang ? '<span class="st merah" title="Belum memenuhi target RHK 9">Kurang '+kurang+'</span>' : '<span class="st tunggu">Menunggu</span>';
+    const bisa = !kurang && bolehSetujui({ memberId: g.memberId, jenis: 'umum' });
+    return '<tr class="baris-g9'+(pilih.has(k)?' pilih':'')+'">'+(massal ? '<td><input type="checkbox" data-pilih="'+kunci+'" value="'+esc(k)+'"'+(pilih.has(k)?' checked':'')+(kurang ? ' disabled title="Belum memenuhi target"' : '')+'></td>' : '')+
+      '<td class="no">'+no+'</td>'+
+      '<td class="n">'+esc(fmtTgl(g.awal))+(g.akhir && g.akhir !== g.awal ? '<div class="kec">s/d '+esc(fmtTgl(g.akhir))+'</div>' : '')+'</td>'+
+      '<td>'+esc(g.nama)+'</td>'+
+      '<td><span class="chip">'+esc(labelRhk(g.rhk))+'</span><div class="kec">1 laporan / bulan</div></td>'+
+      '<td class="ket"><div><b>'+esc(g.judul || 'Laporan RHK 9')+'</b> — gabungan '+esc(fmtBulan(g.bulan))+'</div>'+
+        '<div class="g9-bar"><i style="width:'+Math.min(100, g.target ? Math.round(g.jumlah / g.target * 100) : 100)+'%" class="'+(kurang ? '' : 'ok')+'"></i></div>'+
+        '<div class="kec">'+g.jumlah+' dari '+(g.target || '-')+' laporan/foto · '+g.foto+' foto'+(g.menunggu ? ' · '+g.menunggu+' menunggu' : '')+'</div></td>'+
+      '<td><div>'+esc(g.tempat || '-')+'</div></td>'+
+      '<td>'+status+'</td>'+
+      '<td><div class="aksi"><button class="btn garis kecil" onclick="lihatRhk9(\''+esc(k)+'\')">Lihat</button><button class="btn garis kecil" onclick="ubah(\''+esc(g.contohId)+'\')">Edit</button>'+
+        (semua && g.pdf ? '<a class="btn garis kecil" target="_blank" href="'+esc(g.pdf)+'">PDF</a>' : bisa ? '<button class="btn toska kecil" onclick="setujui([\''+esc(k)+'\'])">Setujui</button>' : kurang ? '<span class="st merah">Belum bisa disetujui</span>' : chipBos)+
+      '</div></td></tr>';
+  }
   function tabel(kunci, data, opsi){
+    if (opsi.gabung9) data = Object.assign({}, data, { laporan: gabungRhk9(data.laporan, data.rhk9) });
     A.cache[kunci] = data.laporan;
     const pilih = A.pilih[kunci] = A.pilih[kunci] || new Set();
     [...pilih].forEach(id => { if (!data.laporan.some(l => l.id === id)) pilih.delete(id); });
@@ -832,6 +880,7 @@ async function drawLap(ctx,l,X){
     let s = '<div class="tabel-wrap"><table class="tb"><thead><tr>'+(opsi.massal ? '<th style="width:30px"><input type="checkbox" data-semua="'+kunci+'"></th>' : '')+
       '<th class="no">No</th><th>Tanggal</th><th>Member</th><th>RHK</th><th>Kegiatan</th><th>Lokasi</th><th>Status</th><th></th></tr></thead><tbody>';
     data.laporan.forEach((l, i) => {
+      if (l.grup9){ s += barisRhk9(l.grup9, hal*per+i+1, pilih, opsi.massal, kunci); return; }
       const ket = l.jenis === 'umum' ? (l.keterangan || '') : 'Kelompok '+(l.kelompok||'-')+(l.modul ? ' · '+l.modul : '')+(l.keterangan ? ' — '+l.keterangan : '');
       s += '<tr class="'+(pilih.has(l.id)?'pilih':'')+'">'+(opsi.massal ? '<td><input type="checkbox" data-pilih="'+kunci+'" value="'+l.id+'"'+(pilih.has(l.id)?' checked':'')+'></td>' : '')+
         '<td class="no">'+(hal*per+i+1)+'</td>'+
@@ -880,7 +929,7 @@ async function drawLap(ctx,l,X){
     const jb = A.init.jumlah.menungguBigBos;
     $('kBigBos').innerHTML = !A.super && jb ? '<div class="alert kuning">⏳ '+jb+' laporan Katimkab (supervisi / RHK sendiri) menunggu persetujuan Big Bos.</div>' : '';
     let d; try{ d = await jalan('Memuat…', () => api('adminDaftar', Object.assign(f, { status:'Menunggu koreksi', urut:'lama', bulan:$('kBulan').value, tanggal:$('kTgl').value, memberId:$('kMember').value, rhk:$('kRhk').value, cari:$('kCari').value, halaman:A.hal.koreksi||0, per:100 }))); }catch(e){ return; }
-    tabel('koreksi', d, { wadah:'kTabel', kosong:'🎉 Tidak ada laporan yang menunggu koreksi.',
+    tabel('koreksi', d, { wadah:'kTabel', kosong:'🎉 Tidak ada laporan yang menunggu koreksi.', gabung9: true,
       aksi: l => '<button class="btn garis kecil" onclick="lihat(\''+l.id+'\')">Lihat</button><button class="btn garis kecil" onclick="ubah(\''+l.id+'\')">Edit</button><button class="btn toska kecil" onclick="setujui([\''+l.id+'\'])">Setujui</button>',
       massal: [['✓ Setujui terpilih', ids => setujui(ids), 'toska'], ['Hapus terpilih', ids => hapus(ids), 'merah']] });
   };
@@ -894,7 +943,7 @@ async function drawLap(ctx,l,X){
     isiPilihan('rMember', 'Semua member', pilihanMember(true));
     isiPilihan('rRhk', 'Semua RHK', A.init.rhk.map(t => [t.rhk, t.rhk]));
     let d; try{ d = await jalan('Memuat…', () => api('adminDaftar', Object.assign(filterRekap(), { halaman:A.hal.rekap||0, per:100 }))); }catch(e){ return; }
-    tabel('rekap', d, { wadah:'rTabel', kosong:'Tidak ada laporan dengan filter ini.',
+    tabel('rekap', d, { wadah:'rTabel', kosong:'Tidak ada laporan dengan filter ini.', gabung9: true,
       aksi: l => '<button class="btn garis kecil" onclick="lihat(\''+l.id+'\')">Lihat</button>'+(bolehUbah(l) ? '<button class="btn garis kecil" onclick="ubah(\''+l.id+'\')">Edit</button>' : '')+
         (l.status === 'Disetujui' ? linkPdf(l) : (bolehSetujui(l) ? '' : chipBos)+'<button class="btn garis kecil" onclick="pratinjau(\''+l.id+'\')">Cetak</button>')+
         (bolehUbah(l) ? '<button class="btn merah kecil" onclick="hapus([\''+l.id+'\'])">Hapus</button>' : ''),
@@ -977,9 +1026,9 @@ async function drawLap(ctx,l,X){
         ? '<button class="btn" onclick="pulihkan([\''+l.id+'\'])">Pulihkan</button>'
         : (bolehUbah(l) ? '<button class="btn garis" onclick="ubah(\''+l.id+'\')">Edit</button>' : '')+
           (l.status === 'Disetujui'
-            ? '<a class="btn garis" target="_blank" href="'+(l.pdfId?urlDrive(l.pdfId):'#')+'">📄 Buka PDF</a>'+(bolehSetujui(l) ? '<button class="btn garis" onclick="setujui([\''+l.id+'\'],true)">Buat ulang PDF</button>' : '')
-            : (bolehSetujui(l) ? '<button class="btn toska" onclick="setujui([\''+l.id+'\'])">✓ Setujui &amp; buat PDF</button>' : ''))+
-          '<button class="btn garis" onclick="pratinjau(\''+l.id+'\')">Pratinjau PDF</button>'+
+            ? '<a class="btn garis" target="_blank" href="'+(l.pdfId?urlDrive(l.pdfId):'#')+'">📄 Buka PDF</a>'+(bolehSetujui(l) ? '<button class="btn garis" onclick="setujui([\''+idSetuju(l)+'\'],true)">Buat ulang PDF</button>' : '')
+            : (bolehSetujui(l) ? '<button class="btn toska" onclick="setujui([\''+idSetuju(l)+'\'])">'+(isRhk9(l) ? '✓ Setujui RHK 9 sebulan' : '✓ Setujui &amp; buat PDF')+'</button>' : ''))+
+          '<button class="btn garis" onclick="pratinjau(\''+idSetuju(l)+'\')">Pratinjau PDF</button>'+
           (bolehUbah(l) ? '<button class="btn merah" onclick="hapus([\''+l.id+'\'])">Hapus</button>' : ''))+'</div>';
     bukaPanel(s);
     ambilFotoAdmin(l.fotoIds).then(f => document.querySelectorAll('#dFoto img').forEach(im => { if (f[im.dataset.f]) im.src = f[im.dataset.f]; else im.alt = 'Foto tidak ditemukan'; })).catch(() => {});
@@ -1129,7 +1178,7 @@ async function drawLap(ctx,l,X){
     try{
       await jalan('Menyusun pratinjau PDF…', async () => {
         baru = await api('adminLaporan', l.id);       // foto baru sudah tersimpan → pakai ID tersimpan untuk penyimpanan berikutnya
-        p = await susunPdf(l.id);
+        p = await susunPdf(idSetuju(l));
       });
     }catch(e){ return; }
     A.ed.l = baru; A.ed.foto = baru.fotoIds.map((f, i) => ({ lama:f, ket:baru.fotoKet[i]||'' })); A.ed.scan = null;
@@ -1159,7 +1208,7 @@ async function drawLap(ctx,l,X){
   /** Setujui dengan PDF yang sudah dipratinjau (tidak disusun ulang). */
   async function setujuiPratinjau(){
     const l = A.ed.l, pr = A.prat; if (!pr || pr.basi) return;
-    try{ await jalan('Menyetujui…', () => api('adminSimpanPdf', l.id, keB64(pr.bytes))); }catch(e){ return; }
+    try{ await jalan('Menyetujui…', () => simpanPdfId(idSetuju(l), pr.bytes)); }catch(e){ return; }
     tutupPanel();
     toast('✓ Disetujui — PDF masuk folder Drive member');
     await segarkan(); MUAT[A.view] && MUAT[A.view]();
@@ -1191,7 +1240,7 @@ async function drawLap(ctx,l,X){
     catch(e){ al.textContent = pesanErr(e); al.classList.remove('hidden'); al.scrollIntoView({ behavior:'smooth' }); return; }
     if (pratinjauSaja){ await tampilPratinjau(r); return; }
     tutupPanel();
-    if (lalSetujui || r.perluPdf){ await setujui([l.id], r.perluPdf && !lalSetujui); return; }
+    if (lalSetujui || r.perluPdf){ await setujui([idSetuju(l)], r.perluPdf && !lalSetujui); return; }
     toast('Perubahan disimpan'); await segarkan(); MUAT[A.view] && MUAT[A.view]();
   }
 
@@ -1381,16 +1430,25 @@ async function drawLap(ctx,l,X){
   function keB64(bytes){ let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); }
 
   /** Susun PDF satu laporan (di browser admin). Hasil: { bytes, nama } */
+  /** Unggah PDF: laporan biasa (id) atau RHK 9 gabungan sebulan (G9|memberId|bulan). */
+  function simpanPdfId(id, bytes){
+    const g = /^G9\|/.test(id) ? id.split('|') : null;
+    return g ? api('adminSimpanPdfRhk9', g[1], g[2], keB64(bytes)) : api('adminSimpanPdf', id, keB64(bytes));
+  }
   async function susunPdf(id){
     if (!window.PDFLib) throw new Error('Pustaka PDF belum termuat. Muat ulang halaman.');
-    const b = await api('adminBahanPdf', id);
+    const g9 = /^G9\|/.test(id) ? id.split('|') : null;
+    const b = g9 ? await api('adminBahanPdfRhk9', g9[1], g9[2]) : await api('adminBahanPdf', id);
     if (b.jenis === 'umum'){
       // RHK 1, 3–9: format Aplikasi 2, TANPA watermark & QR
       const l = b.laporan, foto = await ambilFotoAdmin(b.fotoIds);
       const X = {
         info: { judul: l.judul || 'Laporan', nama: b.pembuat.nama, nip: b.pembuat.nip, tempat: b.pembuat.tempat || judulKata(l.kecamatan) || '', ttd: b.ttd ? b.ttd.src : '' },
         kop: b.kop || '',
-        ket: [['Keterangan Kegiatan', l.keterangan || '-'], ['Hari/Tanggal', hariTgl(l.tanggal) || '-'],
+        ket: b.rhk9
+          ? [['Keterangan Kegiatan', l.keterangan || '-'], ['Periode', (b.awal === b.akhir ? hariTgl(b.awal) : fmtTglPanjang(b.awal).replace(/^\S+, /, '') + ' s/d ' + fmtTglPanjang(b.akhir).replace(/^\S+, /, ''))],
+             ['Jumlah', b.jumlah + ' kegiatan (target ' + (b.target || '-') + ')'], ['Tempat', l.tempat || '-']]
+          : [['Keterangan Kegiatan', l.keterangan || '-'], ['Hari/Tanggal', hariTgl(l.tanggal) || '-'],
               ['Pukul', (l.jamMulai ? jam(l).replace('–', ' – ') + ' WIB' : '-')], ['Tempat', l.tempat || '-']],
         fotos: b.fotoIds.map((f, i) => ({ src: foto[f] || '', link: /^https?:/.test(f) ? f : (foto[f] ? '' : ''), ket: l.fotoKet[i] || '' })).filter(f => f.src || f.link)
       };
@@ -1407,6 +1465,8 @@ async function drawLap(ctx,l,X){
   }
   /** Setujui (atau buat ulang PDF): susun PDF di browser → unggah ke folder Drive member. */
   async function setujui(ids, buatUlang){
+    // entri RHK 9 yang dipilih satu per satu → disetujui sebagai satu laporan gabungan per member per bulan
+    ids = [...new Set(ids.map(id => (A.cache && Object.values(A.cache).flat().find(l => l && l.id === id && isRhk9(l))) ? kunciRhk9(Object.values(A.cache).flat().find(l => l.id === id)) : id))];
     if (!ids.length) return;
     if (ids.length > 1 && !confirm('Setujui '+ids.length+' laporan dan buat PDF-nya?')) return;
     const gagal = [];
@@ -1414,7 +1474,7 @@ async function drawLap(ctx,l,X){
     try{
       for (let i = 0; i < ids.length; i++){
         $('loaderTeks').textContent = (buatUlang ? 'Membuat ulang PDF' : 'Menyetujui') + (ids.length > 1 ? ' '+(i+1)+' dari '+ids.length : '') + '…';
-        try{ const p = await susunPdf(ids[i]); await api('adminSimpanPdf', ids[i], keB64(p.bytes)); }
+        try{ const p = await susunPdf(ids[i]); await simpanPdfId(ids[i], p.bytes); }
         catch(e){ gagal.push(pesanErr(e)); }
       }
     } finally { loader(false); }
@@ -1435,8 +1495,28 @@ async function drawLap(ctx,l,X){
     }catch(e){ if (w) w.close(); }
   }
 
+  /** Rincian RHK 9 sebulan: semua entri & fotonya; tiap entri bisa diedit/dihapus. */
+  async function lihatRhk9(k){
+    const g = A.grup9[k]; if (!g) return;
+    let d; try{ d = await jalan('Memuat RHK 9…', () => api('adminDaftar', { memberId: g.memberId, bulan: g.bulan, rhk: g.rhk, urut: 'lama', per: 200 })); }catch(e){ return; }
+    const list = d.laporan.filter(isRhk9), kurang = Math.max(0, (g.target || 0) - list.length), semua = list.length && list.every(l => l.status === 'Disetujui');
+    bukaPanel('<div class="panel-kepala"><div><div class="kec">RHK 9 · satu laporan per bulan</div><h3>'+esc(g.nama)+' — '+esc(fmtBulan(g.bulan))+'</h3>'+
+        '<div class="kec">'+list.length+' dari '+(g.target || '-')+' laporan/foto'+(kurang ? ' · <b style="color:var(--merah)">kurang '+kurang+'</b> — belum bisa disetujui' : ' · target terpenuhi')+'</div></div><button class="x" onclick="tutupPanel()">×</button></div>'+
+      '<div class="g9-foto">'+list.map((l, i) => '<figure><img data-f="'+esc(l.foto[0] || '')+'" alt=""><figcaption><b>'+(i+1)+'.</b> '+esc(fmtTgl(l.tanggal))+(l.jamMulai ? ' · '+esc(l.jamMulai) : '')+
+        '<div class="kec">'+esc((l.keterangan || '').slice(0, 60))+'</div>'+chipStatus(l)+
+        '<div class="aksi" style="margin-top:4px"><button class="btn garis kecil" onclick="ubah(\''+l.id+'\')">Edit</button>'+(bolehUbah(l) ? '<button class="btn merah kecil" onclick="hapus([\''+l.id+'\'])">Hapus</button>' : '')+'</div></figcaption></figure>').join('')+'</div>'+
+      '<div class="tombol-bawah">'+(semua && g.pdf ? '<a class="btn garis" target="_blank" href="'+esc(g.pdf)+'">📄 Buka PDF</a><button class="btn garis" onclick="setujui([\''+esc(k)+'\'],true)">Buat ulang PDF</button>' :
+        !kurang && bolehSetujui({ memberId: g.memberId, jenis: 'umum' }) ? '<button class="btn toska" onclick="setujui([\''+esc(k)+'\'])">✓ Setujui RHK 9 sebulan</button>' : '')+
+        (!kurang ? '<button class="btn garis" onclick="pratinjau(\''+esc(k)+'\')">Pratinjau PDF</button>' : '')+'<button class="btn garis" onclick="tutupPanel()">Tutup</button></div>');
+    const ids = list.map(l => l.foto[0]).filter(f => f && !/^https?:/.test(f));
+    for (let i = 0; i < ids.length; i += 12){
+      try{ const t = await api('adminThumb', ids.slice(i, i + 12)); document.querySelectorAll('.g9-foto img[data-f]').forEach(im => { if (t[im.dataset.f]) im.src = t[im.dataset.f]; }); }catch(e){ break; }
+    }
+  }
+
   // ================= HAPUS / PULIHKAN =================
   async function hapus(ids){
+    ids = [].concat(...ids.map(id => /^G9\|/.test(id) && A.grup9[id] ? A.grup9[id].ids : [id]));
     if (!ids.length || !confirm('Pindahkan '+ids.length+' laporan ke Tempat Sampah?\nPDF ikut dipindah dan bisa dipulihkan.')) return;
     try{ await jalan('Menghapus…', () => api('adminHapus', ids)); }catch(e){ return; }
     A.pilih[A.view] && A.pilih[A.view].clear(); tutupPanel(); toast('Dipindah ke Tempat Sampah'); await segarkan(); MUAT[A.view]();
