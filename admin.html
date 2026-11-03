@@ -449,8 +449,11 @@
       <h4 style="margin:16px 0 8px">Token login Katimkab</h4>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><code id="bsTokAdm" style="font-size:15px">••••••••</code>
         <button class="btn garis kecil" type="button" onclick="lihatTokenAdmin()">Lihat</button>
-        <button class="btn merah kecil" type="button" onclick="resetTokenAdmin()">Buat token baru</button></div>
-      <div class="catatan" style="margin-top:6px">Token baru langsung berlaku; token lama Katimkab tidak bisa dipakai lagi.</div></div>
+        <button class="btn garis kecil" type="button" onclick="kartuTokenKatim()">Kartu</button>
+        <button class="btn merah kecil" type="button" onclick="resetTokenAdmin()">Buat token acak</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><input id="bsTokBaru" placeholder="Ketik token sendiri, cth. PAK-ULUM" style="max-width:280px;text-transform:uppercase;font-family:Consolas,monospace;letter-spacing:1px">
+        <button class="btn kecil" type="button" onclick="simpanTokenAdmin()">Simpan token</button></div>
+      <div class="catatan" style="margin-top:6px">Token baru langsung berlaku; token lama Katimkab tidak bisa dipakai lagi. Token Katimkab tidak boleh sama dengan token member mana pun.</div></div>
     <div class="kartu"><h2>Profil Katimkab <small>penanda tangan supervisi &amp; akun Katimkab di halaman member</small></h2>
       <div class="g2"><div class="fg"><label>Nama lengkap + gelar</label><input id="aNama"></div><div class="fg"><label>NIP</label><input id="aNip" inputmode="numeric"></div></div>
       <div class="g3"><div class="fg"><label>Gmail (folder Drive laporan sendiri)</label><input id="aGmail" type="email" placeholder="nama@gmail.com"></div><div class="fg"><label>Tempat (kota TTD)</label><input id="aTempat"></div><div class="fg"><label>Kecamatan</label><input id="aKec"></div></div>
@@ -2011,6 +2014,25 @@ async function drawLap(ctx,l,X){
   async function lihatTokenAdmin(){
     let r; try{ r = await jalan('Memuat…', () => api('superTokenAdmin')); }catch(e){ return; }
     $('bsTokAdm').textContent = r.token || '(belum ada)';
+  }
+  async function simpanTokenAdmin(){
+    const t = $('bsTokBaru').value.trim().toUpperCase();
+    if (!t) return toast('Ketik token baru dulu.', true);
+    if (!confirm('Ganti token Katimkab menjadi '+t+'?\nToken lama langsung tidak berlaku.')) return;
+    let r; try{ r = await jalan('Menyimpan token…', () => api('superGantiTokenAdmin', t)); }catch(e){ return; }
+    $('bsTokAdm').textContent = r.token; $('bsTokBaru').value = ''; toast('✓ Token Katimkab: ' + r.token);
+  }
+  async function kartuTokenKatim(){
+    let r; try{ r = await jalan('Menyiapkan kartu…', () => api('superTokenAdmin')); }catch(e){ return; }
+    const pf = A.init.profil || {};
+    const m = { id:'ADMIN', nama: pf.nama || 'KATIMKAB', nip: pf.nip, kecamatan: pf.kecamatan, token: r.token };
+    const c = await gambarKartu(m), url = c.toDataURL('image/png');
+    A.kartuKatim = m;
+    bukaKecil('<div class="panel-kepala"><h3>Kartu token Katimkab</h3><button class="x" onclick="tutupKecil()">×</button></div>'+
+      '<img src="'+url+'" alt="Kartu token Katimkab" style="width:100%;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.12);margin-bottom:12px">'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn toska" id="kkUnduh">⤓ Unduh gambar</button><button class="btn garis" id="kkSalin">📋 Salin pesan WhatsApp</button><button class="btn garis" onclick="tutupKecil()">Tutup</button></div>');
+    $('kkUnduh').onclick = async () => unduhKanvas(await gambarKartu(m), namaFileKartu(m).replace('KARTU-TOKEN_', 'KARTU-TOKEN-KATIMKAB_'));
+    $('kkSalin').onclick = () => { const t = pesanKartu(m); navigator.clipboard.writeText(t).then(() => toast('Pesan disalin'), () => prompt('Salin pesan ini:', t)); };
   }
   async function resetTokenAdmin(){
     if (!confirm('Buat token baru untuk Katimkab?\nToken lama langsung tidak berlaku — berikan token baru ke Katimkab.')) return;
