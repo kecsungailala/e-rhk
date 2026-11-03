@@ -582,6 +582,25 @@
     #pLogo .ganti-profil{background:var(--primary-dark)}
     input[type=checkbox],input[type=radio]{accent-color:var(--primary)}
     .ml-nyala{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);border:0;border-radius:20px;background:rgba(0,0,0,.6);color:#fff;font:inherit;font-size:13px;font-weight:700;padding:7px 14px;cursor:pointer;animation:denyut 1.6s ease-in-out infinite}
+    .ml-muat{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;background:rgba(20,26,12,.35);pointer-events:none}
+    /* ---- form ringkas (Aplikasi 1) & RHK 2 (Aplikasi 3) ---- */
+    .jam-baris{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+    .jam-baris span{font-weight:700;color:var(--text-muted)}
+    .jam-baris + .durasi{margin-top:8px;min-height:0;padding:7px 12px;font-size:13px}
+    .seg-jenis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 14px}
+    .seg-jenis button{padding:11px 8px;border:1.5px solid var(--primary);border-radius:10px;background:#fff;color:var(--primary-dark);font:inherit;font-weight:700;cursor:pointer}
+    .seg-jenis button.on{background:var(--primary);color:#fff}
+    .sv-sumber{display:flex;flex-direction:column;gap:6px}
+    .sv-sumber label{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--border);border-radius:10px;padding:9px 11px;font-weight:400;cursor:pointer;background:#fff;margin:0}
+    .sv-sumber label:has(input:checked){border-color:var(--primary);background:#F4F7EC}
+    .sv-sumber input{width:auto;margin-top:3px}
+    .sv-sumber small{display:block;color:var(--text-muted)}
+    .simpulan{border:1px solid var(--border);background:#F8F9F4;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.55;color:#4A4D46}
+    .pita-katim{background:var(--accent-soft);color:var(--accent-text);font-weight:700;font-size:13px;text-align:center;padding:8px 10px;border-radius:10px;margin:0 0 10px}
+    .info-sv{font-size:12px;line-height:1.45;border-radius:10px;padding:8px 11px;margin:0 0 12px}
+    .info-sv.siap{background:#EEF2E3;color:var(--primary-dark);border:1px solid #B7CB82}
+    .info-sv.belum{background:var(--accent-soft);color:var(--accent-text);border:1px solid #F7C99A}
+    .info-sv:empty{display:none}
   </style>
 </head>
 <body>
@@ -703,90 +722,110 @@
     </div>
     <div id="formAlert" class="alert merah hidden"></div>
     <form id="formLap" novalidate>
-      <div class="fg"><label for="fRhk">JENIS KEGIATAN (RHK) *</label><select id="fRhk" required></select></div>
+      <div class="fg"><label for="fRhk">RHK *</label><select id="fRhk" required></select></div>
 
-      <!-- RHK 1, 3–9 -->
-      <div id="bagUmum">
-        <div class="fg"><label for="fTpl">TEMPLATE LAPORAN</label><select id="fTpl"></select>
-          <div class="catatan" id="fTplInfo">Pilih template agar isi laporan terisi otomatis.</div></div>
+      <!-- Katimkab + RHK 2: dua pilihan seperti Aplikasi 3 -->
+      <div class="seg-jenis hidden" id="fJenisBox">
+        <button type="button" data-j="p2k2" class="on" onclick="pilihJenisKatim('p2k2')">Laporan P2K2</button>
+        <button type="button" data-j="supervisi" onclick="pilihJenisKatim('supervisi')">Supervisi</button>
       </div>
 
-      <div class="row2">
-        <div class="fg"><label for="fTanggal">TANGGAL *</label><input type="date" id="fTanggal" required></div>
-        <div class="fg"><label>DURASI</label><div id="fDurasi" class="durasi">–</div></div>
-      </div>
-      <div class="row2">
-        <div class="fg"><label for="fJamMulai">JAM MULAI *</label><input type="time" id="fJamMulai" required></div>
-        <div class="fg"><label for="fJamSelesai">JAM SELESAI *</label><input type="time" id="fJamSelesai" required></div>
+      <!-- template & isi laporan ditentukan Big Bos saat koreksi (tidak tampil di member) -->
+      <div id="bagUmum" class="hidden"><div id="fTplBox">
+        <select id="fTpl"></select><div id="fTplInfo"></div></div>
+        <details id="fIsiBox"><summary><span id="fIsiInfo"></span></summary><textarea id="fIsi"></textarea></details>
       </div>
 
-      <div class="kotak-lokasi">
-        <div class="row2">
-          <div class="fg"><label for="fKec">KECAMATAN *</label><select id="fKec"></select></div>
-          <div class="fg" id="fDesaBox"><label for="fDesa">DESA *</label><select id="fDesa"></select></div>
-        </div>
-        <div class="fg hidden" id="fDesaLainBox"><input id="fDesaLain" maxlength="60" placeholder="Ketik nama desa"></div>
-        <div class="lokasi-teks" id="fLokasiTeks"></div>
-        <div class="fg" style="margin:8px 0 0"><label for="fTempat">TEMPAT KEGIATAN *</label><input id="fTempat" required maxlength="200" placeholder="Contoh: Kantor Desa / Rumah KPM / Aula Kantor Camat"></div>
-      </div>
-
-      <!-- RHK 1, 3–9 (lanjutan) -->
+      <!-- RHK 1, 3–9: ringkas seperti Aplikasi 1 -->
       <div id="bagUmum2">
-        <div class="fg"><label for="fKet">KETERANGAN KEGIATAN *</label>
+        <div class="fg"><label for="fKet">URAIAN KEGIATAN *</label>
           <textarea id="fKet" maxlength="2000" placeholder="Jelaskan kegiatan yang dilakukan"></textarea>
-          <div class="catatan">Dirapikan otomatis: awal kalimat kapital, nama kantor/wilayah kapital, singkatan (PKH, KPM, P2K2…) huruf besar.</div>
           <div class="rapi-pratinjau hidden" id="fKetRapi"></div></div>
-        <details class="fg" id="fIsiBox">
-          <summary><b>ISI LAPORAN</b> <span class="catatan" id="fIsiInfo">(dari template — ketuk untuk melihat/mengubah)</span></summary>
-          <textarea id="fIsi" maxlength="20000" style="min-height:220px;margin-top:8px;font-family:Consolas,monospace;font-size:13px"></textarea>
-        </details>
       </div>
 
-      <!-- RHK 2 · P2K2 -->
+      <!-- Supervisi (khusus Katimkab) -->
+      <div id="bagSupervisi" class="hidden">
+        <div class="info-sv" id="fSvInfo"></div>
+        <div class="fg"><label for="fSvM">PENDAMPING YANG DISUPERVISI *</label><select id="fSvM"></select></div>
+        <div id="fSvLainBox" class="hidden">
+          <div class="row2"><div class="fg"><label for="fSvNama">NAMA PENDAMPING *</label><input id="fSvNama" maxlength="100" placeholder="cth. SRI WAHYUNI"></div>
+            <div class="fg"><label for="fSvNip">NIP (opsional)</label><input id="fSvNip" inputmode="numeric" maxlength="20"></div></div>
+        </div>
+        <div id="fSvSumber"></div>
+      </div>
+
+      <!-- RHK 2: Desa – Kelompok (seperti Aplikasi 3) -->
       <div id="bagP2k2" class="hidden">
-        <div class="judul-bag">📘 Data P2K2</div>
-        <!-- sama dengan Aplikasi 3: satu pilihan Desa – Kelompok dari data KPM, atau tulis sendiri -->
-        <div class="fg"><label for="fGrup">DESA – KELOMPOK *</label><select id="fGrup"></select>
+        <div class="fg" id="fGrupBox"><label for="fGrup">DESA – KELOMPOK *</label><select id="fGrup"></select>
           <div class="catatan" id="fGrupInfo"></div></div>
-        <div class="row2 hidden" id="fGrupLainBox">
-          <div class="fg"><label for="fGrupDesa">DESA *</label><input id="fGrupDesa" maxlength="60" placeholder="cth. REDANG"></div>
-          <div class="fg"><label for="fGrupKel">NAMA KELOMPOK *</label><input id="fGrupKel" maxlength="40" placeholder="cth. MAWAR / KELOMPOK 2"></div>
+        <div id="fGrupLainBox" class="hidden">
+          <div class="row2">
+            <div class="fg"><label for="fGrupDesa">DESA *</label><input id="fGrupDesa" maxlength="60" placeholder="cth. REDANG"></div>
+            <div class="fg"><label for="fGrupKel">NAMA KELOMPOK *</label><input id="fGrupKel" maxlength="40" placeholder="cth. MAWAR / KELOMPOK 2"></div>
+          </div>
+          <div class="fg"><label for="fGrupKec">KECAMATAN TEMPAT KEGIATAN</label><input id="fGrupKec" maxlength="60" placeholder="cth. Sungai Lala"></div>
         </div>
         <div class="hidden" id="fKelAsli">
-          <div class="fg"><label for="fKel">KELOMPOK *</label><select id="fKel"></select>
-            <div class="catatan" id="fKelInfo"></div></div>
-          <div class="fg hidden" id="fKelLainBox"><input id="fKelLain" maxlength="40" placeholder="Nama kelompok"></div>
+          <select id="fKel"></select><div id="fKelInfo"></div>
+          <div id="fKelLainBox"><input id="fKelLain" maxlength="40"></div>
         </div>
-        <div class="row2">
-          <div class="fg"><label for="fModul">MODUL *</label><select id="fModul"></select></div>
-          <div class="fg"><label for="fSesi">SESI</label><input id="fSesi" maxlength="20" placeholder="Contoh: 2"></div>
-        </div>
-        <div class="fg"><label for="fMateri">MATERI</label><input id="fMateri" maxlength="200" placeholder="Judul materi sesi"></div>
+      </div>
+
+      <div class="fg"><label for="fTanggal">TANGGAL *</label><input type="date" id="fTanggal" required></div>
+      <div class="fg"><label for="fJamMulai">WAKTU (JAM MULAI – JAM SELESAI) *</label>
+        <div class="jam-baris"><input type="time" id="fJamMulai" required aria-label="Jam mulai"><span>–</span><input type="time" id="fJamSelesai" required aria-label="Jam selesai"></div>
+        <div id="fDurasi" class="durasi">–</div></div>
+
+      <!-- kecamatan dari data member; desa tidak diisi member (RHK 2: dari Desa – Kelompok) -->
+      <div class="hidden" id="fLokasiBox">
+        <select id="fKec"></select>
+        <div id="fDesaBox"><select id="fDesa"></select></div>
+        <div id="fDesaLainBox"><input id="fDesaLain" maxlength="60"></div>
+        <div id="fLokasiTeks"></div>
+      </div>
+      <div class="fg"><label for="fTempat" id="fTempatLabel">TEMPAT KEGIATAN *</label><input id="fTempat" required maxlength="200" placeholder="Lokasi kegiatan"></div>
+
+      <!-- RHK 2 (lanjutan) -->
+      <div id="bagP2k2b" class="hidden">
         <div class="row2">
           <div class="fg"><label for="fPemateri">NAMA PEMATERI</label><input id="fPemateri" maxlength="100"></div>
           <div class="fg"><label for="fJabatan">JABATAN / INSTANSI</label><input id="fJabatan" maxlength="100"></div>
         </div>
-        <div class="fg"><label for="fRangkuman">RANGKUMAN KEGIATAN</label><textarea id="fRangkuman" maxlength="5000" placeholder="Ringkasan jalannya pertemuan"></textarea></div>
+        <div class="fg"><label for="fModul">MODUL *</label><select id="fModul"></select></div>
+        <div class="fg hidden" id="fModulLainBox"><input id="fModulLain" maxlength="100" placeholder="Ketik nama modul"></div>
+        <input type="hidden" id="fSesi">
+        <div class="fg"><label for="fMateri">MATERI / SESI</label><input id="fMateri" maxlength="200" placeholder="cth. Kesehatan dan gizi / Jamban sehat"></div>
         <div class="fg" id="fHadirBox"><label>DAFTAR HADIR KPM *</label>
-          <div class="hadir-alat"><button type="button" class="btn putih kecil" onclick="semuaHadir()">✔ Semua hadir</button><span id="fHadirJml" class="catatan"></span></div>
+          <div class="hadir-alat"><button type="button" class="btn putih kecil" onclick="semuaHadir()">✔ Semua hadir</button><button type="button" class="btn putih kecil" onclick="kpmBaruDariForm()">＋ KPM baru</button><span id="fHadirJml" class="catatan"></span></div>
           <div id="fHadir"></div></div>
-        <div class="fg hidden" id="fJumlahBox"><label>JUMLAH PESERTA *</label>
+        <div class="fg hidden" id="fJumlahBox"><label>JUMLAH PESERTA KELOMPOK *</label>
           <div class="jumlah4">
             <label>Hadir<input type="number" min="0" max="999" id="fJmlHadir" value="0"></label>
             <label>Sakit<input type="number" min="0" max="999" id="fJmlSakit" value="0"></label>
             <label>Izin<input type="number" min="0" max="999" id="fJmlIzin" value="0"></label>
             <label>Alpa<input type="number" min="0" max="999" id="fJmlAlpa" value="0"></label>
           </div></div>
-        <div class="fg"><label>SCAN DAFTAR HADIR (opsional)</label>
-          <button type="button" class="btn putih full" onclick="$('fScan').click()">📄 Pilih foto / PDF daftar hadir</button>
-          <input type="file" id="fScan" accept="image/*,application/pdf" class="hidden">
-          <div class="catatan" id="fScanInfo"></div></div>
       </div>
 
-      <div class="judul-bag">📷 Dokumentasi Foto</div>
+      <div class="judul-bag" id="fFotoJudul">📷 Dokumentasi Foto</div>
       <div id="fFotoSlot"></div>
+      <!-- RHK 2: setelah foto kegiatan (wajib) baru daftar hadir (opsional) -->
+      <div class="fg hidden" id="fScanBox"><label>DAFTAR HADIR BERTANDA TANGAN (opsional · foto / PDF)</label>
+        <button type="button" class="btn putih full" onclick="$('fScan').click()">📄 Pilih foto / PDF daftar hadir</button>
+        <input type="file" id="fScan" accept="image/*,application/pdf" class="hidden">
+        <div class="catatan" id="fScanInfo"></div></div>
+      <!-- RHK 2: narasi laporan (seperti Aplikasi 3) -->
+      <div id="bagNarasi" class="hidden">
+        <div class="judul-bag">📝 Narasi Laporan</div>
+        <div class="fg"><label for="fRangkuman" style="display:flex;justify-content:space-between;align-items:center;gap:8px">RANGKUMAN KEGIATAN <button type="button" class="btn putih kecil" onclick="susunRangkuman()">✨ Susun otomatis</button></label>
+          <textarea id="fRangkuman" maxlength="5000" placeholder="Kosongkan bila ingin disusun otomatis"></textarea></div>
+        <div class="fg hidden" id="fTemuanBox"><label for="fTemuan">TEMUAN LAPANGAN &amp; TINDAK LANJUT *</label>
+          <textarea id="fTemuan" maxlength="5000" placeholder="cth. Pendamping menyampaikan materi sesuai modul…"></textarea></div>
+        <div class="fg"><label>SIMPULAN <span class="catatan">(otomatis, mengikuti format laporan sistem — tidak diisi manual)</span></label>
+          <div class="simpulan" id="fSimpulan"></div></div>
+      </div>
       <label id="fAutoSimpanBox" style="display:flex;gap:8px;align-items:center;font-weight:600;margin:0 0 8px"><input type="checkbox" id="fAutoSimpan" style="width:auto"> 💾 Simpan otomatis foto Kamera ke HP (Galeri / folder Download)</label>
-      <div class="catatan" style="margin-bottom:12px">📷 <b>Kamera</b>: langsung memotret, foto diberi cap logo Kemensos, nama, lokasi, titik koordinat, hari-tanggal &amp; jam, lalu tersimpan juga di HP. 🖼️ <b>Galeri</b>: foto dikirim apa adanya tanpa cap. Foto langsung diunggah begitu dipilih supaya tombol kirim lebih cepat.</div>
+      <div class="catatan" style="margin-bottom:12px">📷 <b>Kamera</b>: langsung memotret, foto diberi cap logo Kemensos, nama, lokasi, titik koordinat, hari-tanggal &amp; jam. 🖼️ <b>Galeri</b>: foto dikirim apa adanya tanpa cap. Foto langsung diunggah begitu dipilih supaya tombol kirim lebih cepat.</div>
       <button class="btn full" id="btnKirim" type="submit">KIRIM LAPORAN</button>
       <div class="catatan" style="text-align:center;margin-top:6px">Tanpa sinyal? Laporan disimpan di HP dan terkirim otomatis saat ada sinyal.</div>
     </form>
@@ -1039,7 +1078,7 @@
     $('loginAlert').classList.add('hidden');
     // buka cepat: HP yang pernah masuk langsung menampilkan salinan terakhir, lalu diperbarui diam-diam di latar
     const bln = bulanSekarang(), peranC = bacaCache('peran_'+t), cInit = bacaCache('init_'+t), cRiw = bacaCache('riwayat_'+t+'_'+bln);
-    if (otomatis && cInit && cRiw && (peranC === 'member' || (peranC === 'admin' && MODE_SAYA))){
+    if (otomatis && cInit && cRiw && (peranC === 'member' || peranC === 'admin')){
       tampilMember(t, peranC, cInit.member.nama);
       S.init = cInit; susunDash(cRiw); renderAntrean();
       muatDashboard(true).then(() => kirimAntrean());
@@ -1057,11 +1096,13 @@
       if (!r.ok){ loader(false); $('loginAlert').textContent=r.pesan; $('loginAlert').classList.remove('hidden'); simpanToken('',false); return; }
       simpanToken(t, ingat);
       if (!r.offline) simpanCache('peran_'+t, r.role);
-      if (r.role === 'superadmin' || (r.role === 'admin' && !MODE_SAYA)){ loader(true, 'Membuka panel…'); location.href = 'admin.html'; return; }
+      // satu pintu: hanya Big Bos ke panel admin; Katimkab memakai halaman member ini
+      if (r.role === 'superadmin'){ loader(true, 'Membuka panel…'); location.href = 'admin.html'; return; }
       tampilMember(t, r.role, r.nama);
       if (r.data){
         S.init = r.data.init; simpanCache('init_'+t, S.init); simpanCache('riwayat_'+t+'_'+bln, r.data.riwayat);
         susunDash(r.data.riwayat); $('pOffline').innerHTML = ''; renderAntrean();
+        if (S.init.katim) simpanSumberSvDiHp(bln);
       } else await muatDashboard();
       kirimAntrean();
     }catch(err){
@@ -1072,13 +1113,8 @@
   function tampilMember(t, role, nama){
     S.token = t; S.role = role; S.nama = nama; S.saya = role === 'admin';
     hentikanVideoLogin();
-    if (S.saya){
-      const k = document.querySelector('#kakiKeluar .btn-logout'); if (k) k.textContent = '← Kembali ke panel admin';
-      if (!$('pitaSaya')){ const d = document.createElement('div'); d.id = 'pitaSaya';
-        d.style.cssText = 'background:#F5A524;color:#0b1f38;font-weight:700;font-size:13px;text-align:center;padding:7px 10px;border-radius:10px;margin:0 0 10px';
-        d.innerHTML = 'Laporan Saya — Katimkab · disetujui oleh Big Bos · <a href="admin.html" style="color:#0b1f38">kembali ke panel</a>';
-        $('vPegawai').prepend(d); }
-    }
+    if (S.saya && !$('pitaSaya')){ const d = document.createElement('div'); d.id = 'pitaSaya'; d.className = 'pita-katim';
+      d.innerHTML = '👑 Akun Katimkab · laporan & supervisi Anda disetujui oleh Big Bos'; $('vPegawai').prepend(d); }
     tutup('vLogin');
     document.body.dataset.mode = 'pegawai';
     buka('kakiKeluar'); buka('vPegawai');
@@ -1086,12 +1122,13 @@
   }
 
   async function logout(pesan){
-    if (S.saya && !pesan){ location.href = 'admin.html'; return; }   // mode Laporan Saya: token admin tetap tersimpan
     if (!pesan && (await semuaAntrean()).some(x => x.token === S.token) &&
         !confirm('Masih ada laporan di antrean yang belum terkirim. Laporan itu tetap tersimpan di HP ini dan terkirim saat Anda masuk lagi. Lanjut log-out?')) return;
     simpanToken('', false);
     tutup('kakiKeluar');
-    Object.assign(S, { token:'', role:'', nama:'', dash:null, init:null, foto:{}, editId:null, edit:null });
+    // data P2K2 pendamping untuk supervisi (Katimkab) dihapus dari HP; antrean yang belum terkirim tetap aman
+    try{ Object.keys(localStorage).filter(k => k.indexOf('erhk_svsumber_') === 0).forEach(k => localStorage.removeItem(k)); }catch(e){}
+    Object.assign(S, { token:'', role:'', nama:'', dash:null, init:null, foto:{}, editId:null, edit:null, svSiap:{} });
     document.body.dataset.mode = 'login';
     tutupKamera();
     ['vPegawai','modalForm','modalFoto','modalBanyak','modalKpm'].forEach(tutup);
@@ -1099,6 +1136,8 @@
     buka('vLogin'); tampilAkhirLogin(); tutupPesta(); $('inToken').value='';
     if (pesan){ $('loginAlert').textContent=pesan; $('loginAlert').classList.remove('hidden'); }
     loader(false);
+    // Log-out sendiri → promosi tampil dulu, lalu video pembuka
+    if (!pesan){ const o = PR.info || bacaInfoMedia() || {}; if (!tampilPromo(() => pasangLayarLogin(o))) pasangLayarLogin(o); }
   }
 
   // ---------- simpanan di HP ----------
@@ -1132,6 +1171,7 @@
       simpanCache('riwayat_'+S.token+'_'+S.bulan, r);
       if (!S.token) return;
       susunDash(r);
+      if (S.init && S.init.katim) simpanSumberSvDiHp(bulanSekarang());   // Katimkab: data supervisi siap dipakai tanpa sinyal
     }catch(e){
       if (/SESI_HABIS/.test(pesanErr(e))) return;
       const init = S.init || bacaCache('init_'+S.token), r = bacaCache('riwayat_'+S.token+'_'+S.bulan);
@@ -1155,7 +1195,7 @@
     aturSemangat();
     $('pInfoDrive').innerHTML = i.member.adaGmail
       ? '📁 PDF laporan yang sudah <b>disetujui admin</b> masuk ke Google Drive Anda, menu <b>"Dibagikan kepada saya" → LAPORAN RHK</b>.'
-      : S.saya ? '📁 Isi Gmail Katimkab di panel admin → Pengaturan → Profil Katimkab agar PDF laporan Anda bisa dibuka di Google Drive.'
+      : S.saya ? '📁 Minta Big Bos mengisi Gmail Katimkab (Pengaturan → Profil Katimkab) agar PDF laporan Anda bisa dibuka di Google Drive.'
       : '📁 Gmail Anda belum didaftarkan admin. Setelah didaftarkan, PDF laporan yang disetujui bisa dibuka di Google Drive Anda.';
   }
 
@@ -1614,8 +1654,14 @@
   const STATUS_HADIR = ['Hadir','Sakit','Izin','Alpa'];
   function rhkInfo(nama){ return (S.init.rhk || []).find(t => t.rhk === nama) || null; }
   function modeP2k2(){ const t = rhkInfo($('fRhk').value); return !!t && t.no === '2'; }
+  /** Katimkab + RHK 2 → "Supervisi" (selain "Laporan P2K2"). */
+  function modeSupervisi(){ return modeP2k2() && !!(S.init && S.init.katim) && S.jenisKatim === 'supervisi'; }
   function tplTerpilih(){ return (S.init.template || []).find(t => t.id === $('fTpl').value) || null; }
-  function jumlahSlot(){ if (modeP2k2()) return 1; const t = tplTerpilih(); return Math.max(2, t ? t.foto : 0); }
+  function jumlahSlot(){
+    if (modeP2k2()) return 1;
+    // ringkas seperti Aplikasi 1: Foto 1 wajib + Foto 2 opsional (foto lama yang lebih banyak tetap tampil saat edit)
+    return Math.max(2, S.edit ? (S.edit.fotoIds || []).filter(Boolean).length : 0);
+  }
   function judulKata(s){ return String(s||'').toLowerCase().replace(/(^|\s)(\S)/g, (m, a, b) => a + b.toUpperCase()); }
   /** "kelawat","Sungai Lala","Indragiri Hulu" → "Desa Kelawat, Kecamatan Sungai Lala, Kabupaten Indragiri Hulu" */
   function lokasiTeks(desa, kec, kab){
@@ -1635,11 +1681,13 @@
     buangUnggahan(); buangScan();
     S.edit = l; S.editId = l ? l.id : null;
     S.klienId = 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-    S.gps = {}; S.slot = {}; S.up = {}; S.hadir = {}; S.scan = null; S.tplIsiTerakhir = ''; $('fFotoSlot').innerHTML = '';
+    S.gps = {}; S.slot = {}; S.up = {}; S.hadir = {}; S.scan = null; S.tplIsiTerakhir = ''; $('fFotoSlot').innerHTML = ''; S.svSumber = []; S.svPilih = null;
+    S.jenisKatim = l && l.jenis === 'supervisi' ? 'supervisi' : 'p2k2';
     S.gpsAwal = mintaLokasi();
     $('formLap').reset();
     $('formAlert').classList.add('hidden');
     $('modalFormJudul').textContent = l ? '✏️ Edit Laporan' : 'Tambah Laporan';
+    if (S.init.katim) isiPendamping(l);
     $('btnKirim').textContent = l ? 'SIMPAN PERUBAHAN' : 'KIRIM LAPORAN';
     $('petunjukBanyak').style.display = (!l && rhk9() && sisaRhk9()) ? 'flex' : 'none';
 
@@ -1652,7 +1700,8 @@
       return '<option value="'+esc(r)+'">'+esc(r+ket)+'</option>';
     }).join('');
     // pilihan modul
-    $('fModul').innerHTML = '<option value="">Pilih modul</option>' + (S.init.modul || []).map(m => '<option>'+esc(m)+'</option>').join('');
+    $('fModul').innerHTML = '<option value="">Pilih modul</option>' + (S.init.modul || []).map(m => '<option>'+esc(m)+'</option>').join('') + '<option value="__lain">Lainnya (ketik sendiri)…</option>';
+    aturModul('');
     // kecamatan
     const w = S.init.wilayah || {}, kecs = Object.keys(w).sort();
     const kecAwal = (l && l.kecamatan) || S.init.member.kecamatan || kecs[0] || '';
@@ -1668,11 +1717,13 @@
       $('fTanggal').value = l.tanggal; $('fJamMulai').value = l.jamMulai; $('fJamSelesai').value = l.jamSelesai;
       $('fTempat').value = l.tempat;
       $('fKet').value = l.keterangan || ''; $('fIsi').value = l.isi || '';
-      if (l.jenis === 'p2k2'){
-        $('fModul').value = l.modul; $('fSesi').value = l.sesi || ''; $('fMateri').value = l.materi || '';
+      if (l.jenis === 'p2k2' || l.jenis === 'supervisi'){
+        aturModul(l.modul); $('fSesi').value = l.sesi || ''; $('fMateri').value = l.materi || '';
         $('fPemateri').value = l.pemateri || ''; $('fJabatan').value = l.jabatan || ''; $('fRangkuman').value = l.rangkuman || '';
+        $('fTemuan').value = l.temuan || '';
         (l.absensi || []).forEach(a => { S.hadir[a.kpmId] = { status:a.status, ket:a.keterangan }; });
-        isiGrup(l.desa, l.kelompok, l.manual === 'Y');
+        isiGrup(l.desa, l.kelompok, l.manual === 'Y' || l.jenis === 'supervisi');
+        $('fGrupKec').value = l.kecamatan || '';
         if (l.manual === 'Y'){ $('fJmlHadir').value = l.hadir; $('fJmlSakit').value = l.sakit; $('fJmlIzin').value = l.izin; $('fJmlAlpa').value = l.alpa; }
         $('fScanInfo').textContent = l.scanId ? '📎 Scan daftar hadir sudah ada — pilih file baru bila ingin mengganti.' : '';
       }
@@ -1682,29 +1733,163 @@
       $('fPemateri').value = d.nama; $('fJabatan').value = S.init.instansiPemateri || '';
       aturMode(false);
     }
-    hitungDurasi(); tulisLokasi(); aturSakelarSimpan();
+    hitungDurasi(); tulisLokasi(); aturSakelarSimpan(); tulisSimpulan();
     buka('modalForm');
   }
   function editLap(id){ bukaForm(id); }
   $('fAutoSimpan').addEventListener('change', e => { try{ localStorage.setItem('erhk_autosimpan', e.target.checked ? '1' : '0'); }catch(x){} });
 
-  /** Tampilkan bagian sesuai RHK: umum (RHK 1, 3–9) atau P2K2 (RHK 2). */
+  // modul: pilihan baku + "Lainnya (ketik sendiri)"
+  function aturModul(nilai){
+    const baku = (S.init.modul || []).indexOf(nilai) > -1;
+    $('fModul').value = !nilai ? '' : baku ? nilai : '__lain';
+    $('fModulLain').value = nilai && !baku ? nilai : '';
+    $('fModulLainBox').classList.toggle('hidden', $('fModul').value !== '__lain');
+  }
+  function modulDipilih(){ return $('fModul').value === '__lain' ? $('fModulLain').value.trim() : $('fModul').value; }
+  $('fModul').addEventListener('change', () => { $('fModulLainBox').classList.toggle('hidden', $('fModul').value !== '__lain'); if ($('fModul').value === '__lain') $('fModulLain').focus(); });
+
+  /** Tampilkan bagian sesuai RHK: umum (RHK 1, 3–9, ringkas seperti Aplikasi 1) atau RHK 2 (seperti Aplikasi 3). */
   function aturMode(pertahankanFoto){
-    const p2 = modeP2k2();
-    $('bagUmum').classList.toggle('hidden', p2); $('bagUmum2').classList.toggle('hidden', p2);
-    $('bagP2k2').classList.toggle('hidden', !p2);
-    $('fDesaBox').classList.toggle('hidden', p2);   // RHK 2: desa dipilih lewat Desa – Kelompok
-    if (p2) $('fDesaLainBox').classList.add('hidden');
+    const p2 = modeP2k2(), sv = modeSupervisi(), katim = !!S.init.katim;
+    $('bagUmum2').classList.toggle('hidden', p2);
+    ['bagP2k2','bagP2k2b','bagNarasi','fScanBox'].forEach(i => $(i).classList.toggle('hidden', !p2));
+    $('fJenisBox').classList.toggle('hidden', !(p2 && katim));
+    document.querySelectorAll('#fJenisBox button').forEach(b => b.classList.toggle('on', b.dataset.j === (sv ? 'supervisi' : 'p2k2')));
+    $('bagSupervisi').classList.toggle('hidden', !sv);
+    if (sv) infoSv();
+    $('fGrupBox').classList.toggle('hidden', sv);
+    $('fTemuanBox').classList.toggle('hidden', !sv);
+    $('fTempatLabel').textContent = p2 ? 'TEMPAT PELAKSANAAN *' : 'TEMPAT KEGIATAN *';
+    $('fTempat').placeholder = p2 ? 'cth. RUMAH KPM / RUMAH IBU KASNU / BALAI DESA' : 'Lokasi kegiatan';
+    $('fFotoJudul').classList.add('hidden');   // label kotak foto sudah cukup (seperti Aplikasi 1 & 3)
+    $('petunjukBanyak').style.display = (!S.edit && !p2 && rhk9() && sisaRhk9()) ? 'flex' : 'none';
+    // template (disembunyikan): bila RHK hanya punya satu template, server/Big Bos memakainya
     if (!p2){
       const no = (rhkInfo($('fRhk').value) || {}).no;
       const tpl = (S.init.template || []).filter(t => !no || t.no === no);
       const lama = $('fTpl').value;
-      $('fTpl').innerHTML = '<option value="">— Tanpa template —</option>' + tpl.map(t => '<option value="'+t.id+'">'+esc((t.kode ? t.kode+' — ' : '')+t.nama)+'</option>').join('');
+      $('fTpl').innerHTML = '<option value=""></option>' + tpl.map(t => '<option value="'+t.id+'">'+esc(t.nama)+'</option>').join('');
       if (tpl.some(t => t.id === lama)) $('fTpl').value = lama;
-      else if (tpl.length === 1 && !S.edit) { $('fTpl').value = tpl[0].id; pakaiTemplate(); }
-      $('fTplInfo').textContent = tpl.length ? 'Isi laporan terisi otomatis dari template, bisa Anda ubah.' : (no ? 'Belum ada template untuk RHK ini. Isi laporan memakai keterangan kegiatan.' : '');
-    } else isiGrup();
+    } else if (sv){
+      $('fGrup').innerHTML = '<option value="__lain">lain</option>'; $('fGrup').value = '__lain'; terapkanGrup();
+    } else if (!S.edit || S.edit.jenis !== 'p2k2') isiGrup();
+    if (p2 && !$('fGrupKec').value) $('fGrupKec').value = S.init.member.kecamatan || '';
     renderSlotFoto(pertahankanFoto);
+    tulisSimpulan();
+  }
+  function pilihJenisKatim(j){
+    if (S.edit && (S.edit.jenis === 'supervisi') !== (j === 'supervisi')) return toast('Jenis laporan yang sudah tersimpan tidak bisa diganti.', true);
+    S.jenisKatim = j; aturMode(true);
+    if (j === 'supervisi'){ infoSv(); simpanSumberSvDiHp(($('fTanggal').value || S.dash.hariIni).slice(0, 7)); }
+  }
+  // ---- Supervisi (Katimkab): pendamping + laporan P2K2-nya sebagai sumber isian ----
+  function isiPendamping(l){
+    const ps = S.init.pendamping || [];
+    $('fSvM').innerHTML = '<option value="">Pilih pendamping</option>' + ps.map(p => '<option value="'+p.id+'">'+esc(p.nama)+'</option>').join('') + '<option value="__lain">➕ Pendamping lainnya (tulis sendiri)…</option>';
+    const ada = l && l.jenis === 'supervisi' && ps.some(p => p.id === l.memberId);
+    $('fSvM').value = !l || l.jenis !== 'supervisi' ? '' : ada ? l.memberId : '__lain';
+    $('fSvNama').value = l && l.jenis === 'supervisi' && !ada ? (l.nama || '') : '';
+    $('fSvNip').value = l && l.jenis === 'supervisi' && !ada ? (l.nip || '') : '';
+    $('fSvLainBox').classList.toggle('hidden', $('fSvM').value !== '__lain');
+    $('fSvSumber').innerHTML = '';
+  }
+  async function muatSumberSv(){
+    const id = $('fSvM').value, lain = id === '__lain';
+    $('fSvLainBox').classList.toggle('hidden', !lain);
+    S.svSumber = []; S.svPilih = null;
+    if (!id || lain){ $('fSvSumber').innerHTML = lain ? '<div class="catatan" style="margin:-4px 0 12px">Pendamping di luar daftar: semua isian diketik sendiri.</div>' : ''; if (lain) $('fSvNama').focus(); renderSlotFoto(true); return; }
+    const bln = ($('fTanggal').value || S.dash.hariIni).slice(0, 7);
+    $('fSvSumber').innerHTML = '<div class="catatan" style="margin:-4px 0 12px">⏳ Memuat laporan P2K2 pendamping…</div>';
+    // laporan P2K2 pendamping disimpan di HP → tetap bisa dipilih saat tanpa sinyal
+    const kunci = 'svsumber_'+S.token+'_'+id+'_'+bln;
+    let r, dariHp = false;
+    try{ r = await api('adminSumberSupervisi', S.token, id, bln); simpanCache(kunci, r); }
+    catch(e){
+      r = bacaCache(kunci); dariHp = true;
+      if (!r){ $('fSvSumber').innerHTML = '<div class="alert kuning">📴 '+(navigator.onLine ? esc(pesanErr(e)) : 'Belum ada sinyal dan laporan P2K2 pendamping ini belum pernah dibuka di HP ini.')+' Isian bisa diketik sendiri.</div>'; return; }
+    }
+    if ($('fSvM').value !== id) return;
+    S.svSumber = r;
+    $('fSvSumber').innerHTML = r.length ? '<div class="fg"><label>LAPORAN P2K2 YANG DISUPERVISI <span class="catatan">(ketuk untuk mengisi otomatis'+(dariHp ? ' · 📴 data tersimpan di HP' : '')+')</span></label><div class="sv-sumber">'+
+      r.map((x, i) => '<label><input type="radio" name="fSvPilih" value="'+i+'"> <span><b>'+esc(fmtTgl(x.tanggal))+'</b> · '+esc(judulKata(x.desa))+' – '+esc(x.kelompok)+'<small>'+esc(x.modul || '')+'</small></span></label>').join('')+'</div></div>'
+      : '<div class="catatan" style="margin:-4px 0 12px">Pendamping ini belum punya laporan P2K2 di '+esc(fmtBulan(bln))+'. Isian bisa diketik sendiri.</div>';
+    document.querySelectorAll('[name=fSvPilih]').forEach(el => el.addEventListener('change', () => pakaiSumberSv(S.svSumber[+el.value])));
+  }
+  function pakaiSumberSv(x){
+    S.svPilih = x;
+    $('fTanggal').value = x.tanggal; $('fJamMulai').value = x.jamMulai || ''; $('fJamSelesai').value = x.jamSelesai || '';
+    $('fGrupDesa').value = String(x.desa || '').toUpperCase(); $('fGrupKel').value = x.kelompok || ''; $('fGrupKec').value = x.kecamatan || '';
+    $('fDesaLain').value = $('fGrupDesa').value; $('fKelLain').value = $('fGrupKel').value;
+    $('fTempat').value = x.tempat || ''; aturModul(x.modul || ''); $('fMateri').value = x.materi || ''; $('fSesi').value = x.sesi || '';
+    $('fPemateri').value = x.pemateri || ''; $('fJabatan').value = x.jabatan || $('fJabatan').value;
+    $('fJmlHadir').value = x.hadir || 0; $('fJmlSakit').value = x.sakit || 0; $('fJmlIzin').value = x.izin || 0; $('fJmlAlpa').value = x.alpa || 0;
+    if (x.rangkuman && !$('fRangkuman').value.trim()) $('fRangkuman').value = x.rangkuman;
+    hitungDurasi(); tulisSimpulan(); renderSlotFoto(true);
+    toast('Isian diambil dari laporan P2K2 '+fmtTgl(x.tanggal));
+  }
+  $('fSvM').addEventListener('change', muatSumberSv);
+  /** Saat ada sinyal: simpan semua laporan P2K2 pendamping bulan ini di HP (sekali per bulan per sesi) → supervisi bisa diisi tanpa sinyal. */
+  async function simpanSumberSvDiHp(bln){
+    if (!S.init || !S.init.katim || !navigator.onLine) return;
+    S.svSiap = S.svSiap || {}; if (S.svSiap[bln]) return; S.svSiap[bln] = 1;
+    try{
+      const r = await api('adminSumberSupervisiSemua', S.token, bln);
+      (S.init.pendamping || []).forEach(p => simpanCache('svsumber_'+S.token+'_'+p.id+'_'+bln, r.sumber[p.id] || []));
+    }catch(e){ delete S.svSiap[bln]; }
+    infoSv();
+  }
+  /** Keterangan untuk Katimkab: data P2K2 pendamping bulan ini sudah / belum tersimpan di HP. */
+  function infoSv(){
+    if (!$('fSvInfo') || !S.init || !S.init.katim) return;
+    const bln = ($('fTanggal').value || (S.dash && S.dash.hariIni) || '').slice(0, 7); if (!bln) return;
+    const ps = S.init.pendamping || [];
+    const ada = ps.map(p => bacaCache('svsumber_'+S.token+'_'+p.id+'_'+bln)).filter(x => x !== null);
+    const n = ada.reduce((t, x) => t + x.length, 0);
+    $('fSvInfo').className = 'info-sv ' + (ada.length ? 'siap' : 'belum');
+    $('fSvInfo').innerHTML = ada.length
+      ? '📥 Data P2K2 pendamping '+esc(fmtBulan(bln))+' sudah tersimpan di HP ('+n+' laporan) — supervisi bisa diisi tanpa sinyal. Data ini terhapus saat Log-out dan diambil lagi saat masuk dengan sinyal.'
+      : '⏳ Data P2K2 pendamping '+esc(fmtBulan(bln))+' belum tersimpan di HP. Buka form ini sekali saat ada sinyal supaya supervisi bisa diisi tanpa sinyal.';
+  }
+  $('fTanggal').addEventListener('change', () => { if (modeSupervisi()){ infoSv(); simpanSumberSvDiHp($('fTanggal').value.slice(0, 7)); } });
+  $('fTanggal').addEventListener('change', () => { if (modeSupervisi() && $('fSvM').value && $('fSvM').value !== '__lain' && !S.svPilih) muatSumberSv(); });
+  // ---- narasi: rangkuman otomatis & simpulan baku (sama dengan PDF) ----
+  function jumlahPeserta(){
+    const lain = $('fKel').value === '__lain';
+    if (lain || modeSupervisi()) return { Hadir: +$('fJmlHadir').value || 0, Sakit: +$('fJmlSakit').value || 0, Izin: +$('fJmlIzin').value || 0, Alpa: +$('fJmlAlpa').value || 0 };
+    const h = { Hadir:0, Sakit:0, Izin:0, Alpa:0 }; kpmKelompok().forEach(k => { h[(S.hadir[k.id] || {}).status || 'Hadir']++; }); return h;
+  }
+  function tglPanjang(t){ if (!t) return '-'; const [y, m, d] = t.split('-').map(Number); return d+' '+BLN[m-1]+' '+y; }
+  function susunRangkuman(){
+    const desa = modeSupervisi() || $('fKel').value === '__lain' ? $('fGrupDesa').value.trim() : desaDipilih();
+    const kelRaw = modeSupervisi() || $('fKel').value === '__lain' ? $('fGrupKel').value.trim() : $('fKel').value;
+    if (!desa || !kelRaw) return toast('Pilih / isi desa dan kelompok dulu.', true);
+    const h = jumlahPeserta(), materi = $('fMateri').value.trim() || modulDipilih() || '-';
+    const kel = /^kelompok\b/i.test(kelRaw) ? judulKata(kelRaw) : 'Kelompok ' + judulKata(kelRaw);
+    const jam = $('fJamMulai').value.replace(':', '.') + '–' + $('fJamSelesai').value.replace(':', '.');
+    let t = 'Kegiatan P2K2 kelompok PKH Desa '+judulKata(desa)+' '+kel+' dilaksanakan pada tanggal '+tglPanjang($('fTanggal').value)+' pukul '+jam+
+      ' WIB bertempat di '+judulKata($('fTempat').value.trim() || '-')+' dan diikuti oleh '+h.Hadir+' KPM. Materi yang disampaikan adalah '+materi+
+      '. Dalam kegiatan ini peserta berpartisipasi aktif melalui penyampaian materi, diskusi, dan tanya jawab.';
+    const tdk = h.Sakit + h.Izin + h.Alpa;
+    if (tdk) t += ' Sebanyak '+tdk+' KPM tidak hadir (sakit '+h.Sakit+', izin '+h.Izin+', alpa '+h.Alpa+').';
+    t += ' Hasil kegiatan menunjukkan peserta memahami materi '+materi+' dan berkomitmen menerapkannya dalam kehidupan sehari-hari.';
+    if ($('fRangkuman').value.trim() && !confirm('Ganti rangkuman yang sudah ada dengan susunan otomatis?')) return;
+    $('fRangkuman').value = t;
+  }
+  function tulisSimpulan(){
+    if (!modeP2k2()) return;
+    const sv = modeSupervisi(), m = String(sv ? modulDipilih() : ($('fMateri').value.trim() || modulDipilih())).trim().replace(/[.\s]+$/, '') || '…';
+    $('fSimpulan').textContent = sv
+      ? 'Berdasarkan hasil supervisi yang dilakukan, pelaksanaan Pertemuan Peningkatan Kemampuan Keluarga (P2K2) berjalan dengan baik dan tertib, dengan Pendamping Sosial PKH menjalankan fasilitasi sesuai standar operasional prosedur (SOP) yang berlaku. KPM mampu memahami materi yang diberikan dan menunjukkan antusiasme dan keterlibatan aktif dalam diskusi, yang menunjukkan bahwa kegiatan ini memberikan dampak pada perubahan perilaku serta peningkatan kemampuan keluarga dalam hal '+m+'.'
+      : '🔒 Pelaksanaan Pertemuan Peningkatan Kemampuan Keluarga (P2K2) berjalan dengan baik, tertib. KPM mampu memahami materi yang diberikan dan menunjukkan antusiasme dan keterlibatan aktif dalam diskusi, yang menunjukkan bahwa kegiatan ini memberikan dampak pada perubahan perilaku serta peningkatan kemampuan keluarga dalam hal '+m+'.';
+  }
+  ['fMateri','fModulLain'].forEach(i => $(i).addEventListener('input', tulisSimpulan));
+  $('fModul').addEventListener('change', tulisSimpulan);
+  function kpmBaruDariForm(){
+    bukaKpm();
+    const v = $('fGrup').value;
+    if (v && v !== '__lain'){ const [d, k] = v.split('||'); $('kFDesa').value = d; $('kFKel').value = k; }
+    if ($('kFormBox')) $('kFormBox').open = true;
   }
   $('fRhk').addEventListener('change', () => aturMode(false));
   $('fTpl').addEventListener('change', () => { pakaiTemplate(); renderSlotFoto(true); });
@@ -1891,13 +2076,14 @@
       if (ada[k]) ada[k].remove();
       const el = document.createElement('div');
       el.className = 'fg slot-foto'; el.dataset.n = k;
-      el.innerHTML = '<label id="labelFoto'+k+'">FOTO '+k+(i === 1 && !(lama[0]) ? ' *' : ' (opsional)')+'</label>'+
+      const wajib = i === 1 && !(lama[0]) && !(modeSupervisi() && S.svPilih && S.svPilih.fotoSumberId);
+      el.innerHTML = '<label id="labelFoto'+k+'">'+(modeP2k2() ? 'FOTO KEGIATAN' : 'DOKUMENTASI FOTO '+k)+(wajib ? ' *' : ' (opsional)')+'</label>'+
         '<div class="pilih-foto"><button type="button" class="btn putih" onclick="pilihFoto(\''+k+'\',\'kamera\')">📷 Kamera</button>'+
         '<button type="button" class="btn putih" onclick="pilihFoto(\''+k+'\',\'galeri\')">🖼️ Galeri</button></div>'+
         '<input type="file" id="fKamera'+k+'" accept="image/*" capture="environment" class="hidden">'+
         '<input type="file" id="fGaleri'+k+'" accept="image/*" class="hidden">'+
         '<div class="info-foto" id="fFoto'+k+'Teks"></div><div class="preview" id="fPrev'+k+'"></div>'+
-        '<input id="fKetFoto'+k+'" maxlength="120" placeholder="Keterangan foto (opsional)" style="margin-top:6px" value="'+esc(ketLama[i-1] || '')+'">';
+        '<input type="hidden" id="fKetFoto'+k+'" value="'+esc(ketLama[i-1] || '')+'">';
       $('fFotoSlot').appendChild(el);
       $('fKamera'+k).addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) prosesFile(k, f, true); });
       $('fGaleri'+k).addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) prosesFile(k, f, false); });
@@ -2141,6 +2327,47 @@
 
   const salahJaringan = m => /terhubung|internet|Failed to fetch|NetworkError|jaringan/i.test(m || '');
 
+  /** Supervisi P2K2 oleh Katimkab — seperti laporan biasa: masuk antrean HP, terkirim di latar (tanpa sinyal → saat ada sinyal). */
+  async function kirimSupervisi(salah){
+    const v = i => $(i).value.trim(), edit = S.edit, m = $('fSvM').value;
+    if (!m) return salah('Pilih pendamping yang disupervisi.');
+    if (m === '__lain' && !v('fSvNama')) return salah('Tulis nama pendamping.');
+    if (!v('fGrupDesa') || !v('fGrupKel')) return salah('Isi desa dan nama kelompok.');
+    if (!$('fTanggal').value) return salah('Tanggal wajib diisi.');
+    if (!$('fJamMulai').value || !$('fJamSelesai').value || $('fJamSelesai').value <= $('fJamMulai').value) return salah('Isi jam mulai dan jam selesai dengan benar.');
+    if (!v('fTempat')) return salah('Tempat pelaksanaan wajib diisi.');
+    if (!modulDipilih()) return salah('Pilih modul.');
+    if (!v('fTemuan')) return salah('Temuan lapangan & tindak lanjut wajib diisi.');
+    const sumber = S.svPilih, sl = S.slot['1'], u = S.up['1'];
+    if (sl && sl.tolak) return salah('Foto sudah pernah dipakai / sama dengan foto lain. Silakan ganti fotonya.');
+    const fotoBaru = !!(sl && !sl.tolak);
+    const adaFoto = fotoBaru || (edit && (edit.fotoIds || []).filter(Boolean).length) || (sumber && sumber.fotoSumberId);
+    if (!adaFoto) return salah('Foto kegiatan wajib diunggah.');
+    const d = { id: edit ? edit.id : '', klienId: S.klienId, memberId: m, sumberLapId: sumber ? sumber.id : '', tanggal: $('fTanggal').value, jamMulai: $('fJamMulai').value, jamSelesai: $('fJamSelesai').value,
+      desa: v('fGrupDesa'), kelompok: v('fGrupKel'), kecamatan: v('fGrupKec'), tempat: v('fTempat'), modul: modulDipilih(), sesi: v('fSesi'), materi: v('fMateri'),
+      pemateri: v('fPemateri'), jabatan: v('fJabatan'), hadir: $('fJmlHadir').value, sakit: $('fJmlSakit').value, izin: $('fJmlIzin').value, alpa: $('fJmlAlpa').value,
+      rangkuman: v('fRangkuman'), temuan: v('fTemuan'), fotoDariSumber: !fotoBaru && !!(sumber && sumber.fotoSumberId) };
+    if (m === '__lain') Object.assign(d, { namaLain: v('fSvNama'), nipLain: v('fSvNip'), kecamatanLain: v('fGrupKec') });
+    const namaP = m === '__lain' ? v('fSvNama') : (($('fSvM').selectedOptions[0] || {}).textContent || '');
+    const item = {
+      jenis: 'supervisi', klienId: S.klienId, token: S.token, dibuat: Date.now(), data: d,
+      foto: fotoBaru ? [u && u.id ? { id: u.id } : { dataUrl: sl.dataUrl }] : [],
+      scan: S.scan ? (S.scan.id ? { id: S.scan.id } : { dataUrl: S.scan.dataUrl }) : null,
+      ringkas: { rhk: 'Supervisi P2K2', tanggal: d.tanggal, ket: (namaP + ' · ' + d.kelompok).slice(0, 80) }
+    };
+    try{ await simpanAntrean(item); }catch(err){ return salah(pesanErr(err)); }
+    // foto / daftar hadir yang masih diunggah → hasilnya dipakai (tidak diunggah dua kali)
+    const antri = [];
+    if (fotoBaru && u && !u.id && !u.gagal && u.promise) antri.push(u.promise.then(() => { if (u.id) item.foto = [{ id: u.id }]; }).catch(() => {}));
+    const sc = S.scan;
+    if (sc && !sc.id && !sc.gagal && sc.promise) antri.push(sc.promise.then(() => { if (sc.id) item.scan = { id: sc.id }; }).catch(() => {}));
+    S.up = {}; S.scan = null; S.edit = null; S.editId = null;
+    tutup('modalForm');
+    toast(navigator.onLine ? '📤 Supervisi sedang dikirim…' : '📴 Belum ada sinyal. Supervisi disimpan di HP dan terkirim otomatis saat ada sinyal.');
+    renderAntrean();
+    Promise.all(antri).then(async () => { if (antri.length) await simpanAntrean(item).catch(() => {}); kirimAntrean(); });
+  }
+
   // ---------- KIRIM ----------
   $('formLap').addEventListener('submit', async e => {
     e.preventDefault();
@@ -2148,6 +2375,8 @@
     const salah = m => { al.textContent = m; al.classList.remove('hidden'); al.scrollIntoView({behavior:'smooth'}); };
     const p2 = modeP2k2(), edit = S.edit;
     if (!$('fRhk').value) return salah('Pilih RHK terlebih dahulu.');
+    if (modeSupervisi()) return kirimSupervisi(salah);
+    if (!p2 && $('fKet').value.trim().length < 5) return salah('Uraian kegiatan terlalu singkat.');
     if (!$('fTanggal').value) return salah('Tanggal wajib diisi.');
     if ($('fTanggal').value > S.dash.hariIni) return salah('Tanggal tidak boleh melewati hari ini.');
     if (!$('fJamMulai').value || !$('fJamSelesai').value) return salah('Isi jam mulai dan jam selesai.');
@@ -2155,15 +2384,15 @@
     if (p2 && !$('fGrup').value) return salah('Pilih desa – kelompok.');
     if (p2 && $('fGrup').value === '__lain' && !$('fGrupDesa').value.trim()) return salah('Tulis nama desa.');
     if (p2 && $('fGrup').value === '__lain' && !$('fGrupKel').value.trim()) return salah('Tulis nama kelompok.');
-    if (!desaDipilih()) return salah('Pilih desa.');
+    if (p2 && !desaDipilih()) return salah('Pilih desa.');
     if (!$('fTempat').value.trim()) return salah('Tempat kegiatan wajib diisi.');
-    if (!p2 && $('fKet').value.trim().length < 5) return salah('Keterangan kegiatan terlalu singkat.');
+
     let manual = false;
     if (p2){
       if (!$('fKel').value) return salah('Pilih kelompok.');
       manual = $('fKel').value === '__lain';
       if (manual && !$('fKelLain').value.trim()) return salah('Isi nama kelompok.');
-      if (!$('fModul').value) return salah('Pilih modul.');
+      if (!modulDipilih()) return salah($('fModul').value === '__lain' ? 'Ketik nama modul.' : 'Pilih modul.');
       if (manual && !['fJmlHadir','fJmlSakit','fJmlIzin','fJmlAlpa'].some(i => +$(i).value > 0)) return salah('Isi jumlah peserta.');
       if (!manual && !kpmKelompok().length) return salah('Kelompok ini belum punya data KPM.');
     }
@@ -2186,7 +2415,7 @@
     const data = {
       id: edit ? edit.id : '', klienId: S.klienId, rhk: $('fRhk').value,
       tanggal: $('fTanggal').value, jamMulai: $('fJamMulai').value, jamSelesai: $('fJamSelesai').value,
-      desa: desaDipilih(), kecamatan: $('fKec').value, tempat: $('fTempat').value.trim(),
+      desa: desaDipilih(), kecamatan: (p2 && $('fGrup').value === '__lain' && $('fGrupKec').value.trim()) || $('fKec').value, tempat: $('fTempat').value.trim(),
       konfirmasiMirip: kotak.some(k => S.slot[k] && S.slot[k].mirip),
       lokasi: (kotak.map(k => S.up[k] && S.up[k].lokasi).find(Boolean)) || null,
       sumber: kotak.filter(k => S.slot[k]).map(k => {
@@ -2198,7 +2427,7 @@
     if (p2){
       Object.assign(data, {
         kelompok: manual ? $('fKelLain').value.trim() : $('fKel').value, manual: manual,
-        modul: $('fModul').value, sesi: $('fSesi').value.trim(), materi: $('fMateri').value.trim(),
+        modul: modulDipilih(), sesi: $('fSesi').value.trim(), materi: $('fMateri').value.trim(),
         pemateri: $('fPemateri').value.trim(), jabatan: $('fJabatan').value.trim(), rangkuman: $('fRangkuman').value.trim(),
         jumlah: { hadir: $('fJmlHadir').value, sakit: $('fJmlSakit').value, izin: $('fJmlIzin').value, alpa: $('fJmlAlpa').value },
         absensi: manual ? [] : kpmKelompok().map(k => ({ kpmId: k.id, status: (S.hadir[k.id] || {}).status || 'Hadir', keterangan: (S.hadir[k.id] || {}).ket || '' }))
@@ -2337,6 +2566,14 @@
             if (f && f.dataUrl && !f.id){ const r = await api('uploadFoto', it.token, f.dataUrl); f.id = r.id; delete f.dataUrl; await simpanAntrean(it); }
           }
           if (it.scan && it.scan.dataUrl && !it.scan.id){ const r = await api('uploadBerkas', it.token, it.scan.dataUrl); it.scan = { id: r.id }; await simpanAntrean(it); }
+          if (it.jenis === 'supervisi'){
+            const ds = Object.assign({}, it.data);
+            if (it.foto[0] && it.foto[0].id) ds.fotoId = it.foto[0].id;
+            if (it.scan && it.scan.id) ds.scanId = it.scan.id;
+            await api('adminSimpanSupervisi', it.token, ds);
+            await hapusAntrean(it.klienId); terkirim++;
+            continue;
+          }
           const data = Object.assign({}, it.data, {
             foto: it.foto.map(f => !f ? null : f.lama ? { lama: f.lama, ket: f.ket } : { id: f.id, sidik: f.sidik, ket: f.ket })
           });
@@ -2399,6 +2636,11 @@
       const i = list.findIndex(x => x.id === k.id); if (i > -1) list[i] = k; else list.push(k);
       simpanCache('init_'+S.token, S.init);
       toast('✅ KPM tersimpan'); resetKpm(); renderKpm();
+      // form laporan RHK 2 sedang terbuka → daftar Desa – Kelompok & hadir ikut diperbarui
+      if (!$('modalForm').classList.contains('hidden') && modeP2k2() && !modeSupervisi()){
+        const g = String(k.desa || '').trim().toUpperCase() + '||' + String(k.kelompok || '').trim();
+        isiGrup(); $('fGrup').value = g; terapkanGrup();
+      }
     }catch(err){ toast(pesanErr(err), true); }
     finally{ loader(false); }
   });
@@ -3057,49 +3299,153 @@
   });
   function tutupLayarPenuh(){ tutup('layarPenuh'); $('layarPenuhImg').removeAttribute('src'); }
 
-  // ---------- TAMPILAN LOGIN: video pembuka / promosi / animasi tokoh / tanpa media (diatur Big Bos) ----------
+  // ================= PROMOSI (dipakai halaman member & admin) =================
+  // Muncul layar penuh setelah 2 menit tanpa aktivitas dan saat Log-out. Isi: maks. 2 video + 3 gambar bergantian
+  // (video sampai habis, gambar 10 detik). Ketuk di mana saja = tutup. Diatur Big Bos di Pengaturan → Promosi.
+  const PROMO_DIAM_MS = 2 * 60 * 1000, PROMO_GAMBAR_MS = 10 * 1000;
+  const PR = { info: null, url: {}, aktif: false, i: 0, jeda: null, diam: null, stlTutup: null };
+  function bacaInfoMedia(){ try{ return JSON.parse(localStorage.getItem('erhk_login_media') || 'null'); }catch(e){ return null; } }
+  function simpanInfoMedia(o){ try{ localStorage.setItem('erhk_login_media', JSON.stringify(o)); }catch(e){} }
+  /** Video/gambar unggahan Big Bos: diunduh sekali dari server lalu disimpan di HP (Cache Storage). */
+  async function ambilMediaLogin(id){
+    const kunci = './media-login/' + id;
+    let c = null;
+    try{ c = await caches.open('erhk-media'); const r = await c.match(kunci); if (r) return URL.createObjectURL(await r.blob()); }catch(e){ c = null; }
+    const h = await api('mediaLogin', id);
+    const blob = await (await fetch(h.data)).blob();
+    if (c){ try{ await c.put(kunci, new Response(blob, { headers: { 'Content-Type': blob.type || 'application/octet-stream' } })); }catch(e){} }
+    return URL.createObjectURL(blob);
+  }
+  /** Buang berkas lama di HP yang sudah tidak dipasang. */
+  async function rapikanCacheMedia(o){
+    try{
+      const pakai = [o.pembukaId].concat(((o.promo || {}).items || []).map(x => x.id)).filter(Boolean);
+      const c = await caches.open('erhk-media');
+      (await c.keys()).forEach(k => { if (!pakai.some(id => k.url.indexOf('/media-login/' + id) > -1)) c.delete(k); });
+    }catch(e){}
+  }
+  /** Ambil pengaturan terbaru (diam-diam) lalu siapkan isi promosi di HP. */
+  async function siapkanPromo(){
+    PR.info = bacaInfoMedia();
+    try{ const baru = await api('infoLogin'); PR.info = baru; simpanInfoMedia(baru); rapikanCacheMedia(baru); }catch(e){}
+    const items = ((PR.info || {}).promo || {}).items || [];
+    for (const it of items){ if (!PR.url[it.id]){ try{ PR.url[it.id] = await ambilMediaLogin(it.id); }catch(e){} } }
+    return PR.info;
+  }
+  function promoSiap(){ return (((PR.info || {}).promo || {}).items || []).filter(it => PR.url[it.id]); }
+
+  // ---- penghitung 2 menit tanpa aktivitas ----
+  function aturDiam(){
+    clearTimeout(PR.diam);
+    PR.diam = setTimeout(() => {
+      if (document.hidden || PR.aktif) return aturDiam();
+      if (promoSiap().length) tampilPromo(); else aturDiam();
+    }, PROMO_DIAM_MS);
+  }
+  ['pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll', 'mousemove'].forEach(ev =>
+    window.addEventListener(ev, () => { if (!PR.aktif) aturDiam(); }, { passive: true, capture: true }));
+
+  // ---- layar promosi ----
+  function waLink(hp){ hp = String(hp || '').replace(/[^\d]/g, ''); if (hp.startsWith('0')) hp = '62' + hp.slice(1); return 'https://wa.me/' + hp; }
+  function hpTampil(hp){ return String(hp || '').replace(/^(\+?62)/, '0').replace(/(\d{4})(\d{4})(\d+)/, '$1-$2-$3'); }
+  /** stlTutup = fungsi yang dijalankan setelah promosi ditutup (mis. memutar video pembuka). */
+  function tampilPromo(stlTutup){
+    const items = promoSiap();
+    if (PR.aktif || !items.length){ if (stlTutup) stlTutup(); return false; }
+    PR.aktif = true; PR.i = 0; PR.stlTutup = stlTutup || null;
+    clearTimeout(PR.diam);
+    document.querySelectorAll('video').forEach(v => { if (!v.closest('#promoLayar') && !v.paused){ v.dataset.dijedaPromo = '1'; v.pause(); } });
+    const p = (PR.info || {}).promo || {};
+    const el = document.createElement('div');
+    el.id = 'promoLayar';
+    el.innerHTML = '<div class="pr-media" id="prMedia"></div>'+
+      '<div class="pr-bawah">'+(p.teks ? '<div class="pr-teks">'+esc(p.teks)+'</div>' : '')+
+        (p.hp ? '<a class="pr-wa" id="prWa" target="_blank" rel="noopener" href="'+waLink(p.hp)+'">💬 WhatsApp '+esc(hpTampil(p.hp))+'</a>' : '')+
+        '<div class="pr-tutup">Ketuk di mana saja untuk kembali</div></div>'+
+      '<div class="pr-titik" id="prTitik">'+items.map(() => '<i></i>').join('')+'</div>';
+    el.addEventListener('click', e => { if (!e.target.closest('#prWa')) tutupPromo(); });
+    document.body.appendChild(el);
+    mainPromo();
+    return true;
+  }
+  function mainPromo(){
+    const items = promoSiap(); if (!PR.aktif || !items.length) return;
+    clearTimeout(PR.jeda);
+    const it = items[PR.i % items.length], wadah = $('prMedia'), lanjut = () => { PR.i++; mainPromo(); };
+    document.querySelectorAll('#prTitik i').forEach((t, k) => t.classList.toggle('on', k === PR.i % items.length));
+    if (it.jenis === 'foto'){
+      wadah.innerHTML = '<img src="'+PR.url[it.id]+'" alt="Promosi">';
+      PR.jeda = setTimeout(lanjut, PROMO_GAMBAR_MS);
+      return;
+    }
+    wadah.innerHTML = '<video playsinline autoplay src="'+PR.url[it.id]+'"></video>';
+    const v = wadah.querySelector('video');
+    v.addEventListener('ended', () => items.length > 1 ? lanjut() : (v.currentTime = 0, v.play().catch(() => {})));
+    v.addEventListener('error', () => { PR.jeda = setTimeout(lanjut, 500); });
+    const pl = v.play();   // coba dengan suara; ditolak browser → tanpa suara
+    if (pl && pl.catch) pl.catch(() => { v.muted = true; v.play().catch(() => { PR.jeda = setTimeout(lanjut, 500); }); });
+  }
+  function tutupPromo(){
+    if (!PR.aktif) return;
+    PR.aktif = false; clearTimeout(PR.jeda);
+    const el = $('promoLayar'); if (el){ el.querySelectorAll('video').forEach(v => v.pause()); el.remove(); }
+    document.querySelectorAll('video[data-dijeda-promo]').forEach(v => { delete v.dataset.dijedaPromo; v.play().catch(() => {}); });
+    const f = PR.stlTutup; PR.stlTutup = null;
+    aturDiam();
+    if (f) f();
+  }
+  (function(){
+    const st = document.createElement('style');
+    st.textContent = '#promoLayar{position:fixed;inset:0;z-index:9999;background:#11160b;color:#fff;display:flex;flex-direction:column;cursor:pointer;animation:prMasuk .35s ease}'+
+      '#promoLayar .pr-media{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}'+
+      '#promoLayar .pr-media img,#promoLayar .pr-media video{max-width:100%;max-height:100%;object-fit:contain;display:block}'+
+      '#promoLayar .pr-bawah{padding:12px 16px calc(14px + env(safe-area-inset-bottom));text-align:center;background:linear-gradient(transparent,rgba(0,0,0,.55))}'+
+      '#promoLayar .pr-teks{font-weight:700;font-size:15px;margin-bottom:8px}'+
+      '#promoLayar .pr-wa{display:inline-block;background:#25D366;color:#fff;font-weight:700;text-decoration:none;border-radius:24px;padding:10px 18px;font-size:14px;margin-bottom:8px}'+
+      '#promoLayar .pr-tutup{font-size:12px;opacity:.75}'+
+      '#promoLayar .pr-titik{position:absolute;top:12px;left:0;right:0;display:flex;justify-content:center;gap:6px}'+
+      '#promoLayar .pr-titik i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35)}#promoLayar .pr-titik i.on{background:#F28C28}'+
+      '@keyframes prMasuk{from{opacity:0}to{opacity:1}}';
+    document.head.appendChild(st);
+  })();
+
+  // ---------- LAYAR LOGIN: VIDEO PEMBUKA (selalu tampil) ----------
   // Video langsung berputar sendiri. Bila browser menolak suara (aturan Chrome/Safari sebelum layar disentuh),
   // video tetap jalan tanpa suara dan suara menyala pada sentuhan pertama di mana saja.
-  const MEDIA_FILE = { pembuka: { video: 'media/pembuka.mp4', poster: 'media/pembuka.jpg' }, promosi: { video: 'media/promosi.mp4', poster: '' } };
-  let mlAktif = '';
-  function bacaLoginMedia(){ try{ return JSON.parse(localStorage.getItem('erhk_login_media') || 'null'); }catch(e){ return null; } }
+  // Sesudah Log-out (member/admin) → promosi tampil dulu, lalu video pembuka.
+  const PEMBUKA_BAWAAN = { video: 'media/pembuka.mp4', poster: 'media/pembuka.jpg' };
   async function mulaiLayarLogin(){
-    const c = bacaLoginMedia() || { media: 'pembuka', promoJenis: 'foto', promoTeks: '', promoLink: '' };
-    pasangLayarLogin(c);
-    try{
-      const baru = await api('infoLogin');
-      try{ localStorage.setItem('erhk_login_media', JSON.stringify(baru)); }catch(e){}
-      if (!S.token && JSON.stringify(baru) !== JSON.stringify(c)) pasangLayarLogin(baru);   // pengaturan Big Bos berubah → langsung dipakai
-    }catch(e){}
+    let o = bacaInfoMedia() || { pembukaId: '', promo: { items: [] } };
+    let keluar = false;
+    try{ keluar = sessionStorage.getItem('erhk_promo_keluar') === '1'; sessionStorage.removeItem('erhk_promo_keluar'); }catch(e){}
+    if (!keluar) pasangLayarLogin(o);
+    const baru = await siapkanPromo() || o;
+    aturDiam();
+    if (keluar){ if (!tampilPromo(() => pasangLayarLogin(baru))) pasangLayarLogin(baru); return; }
+    if (!S.token && (baru.pembukaId || '') !== (o.pembukaId || '')) pasangLayarLogin(baru);   // video pembuka diganti Big Bos
   }
   function hentikanVideoLogin(){ const v = $('mlVideo'); if (v){ try{ v.pause(); }catch(e){} } }
   function pasangLayarLogin(o){
     const box = $('mediaLogin'), lajur = $('lajur');
-    const media = o && o.media || 'pembuka';
-    mlAktif = media;
     hentikanVideoLogin();
-    if (media === 'animasi'){ box.classList.add('hidden'); box.innerHTML = ''; lajur.classList.remove('hidden'); animasiLogin(); return; }
     animLewat = true; tampilAkhirLogin(); lajur.classList.add('hidden'); $('btnLewati').classList.add('hidden');
-    if (media === 'tidak'){ box.classList.add('hidden'); box.innerHTML = ''; return; }
-    const teks = o.promoTeks ? '<div class="ml-teks">'+esc(o.promoTeks)+'</div>' : '';
-    const link = o.promoLink ? '<a class="btn putih kecil ml-link" target="_blank" rel="noopener" href="'+esc(o.promoLink)+'">Info lebih lanjut ↗</a>' : '';
-    if (media === 'promosi' && o.promoJenis !== 'video'){
-      box.innerHTML = o.promoFoto ? '<div class="ml-bingkai foto"><img src="'+o.promoFoto+'" alt="Promosi"></div>'+teks+link : teks+link;
-      box.classList.toggle('hidden', !box.innerHTML);
-      return;
-    }
-    const f = MEDIA_FILE[media] || MEDIA_FILE.pembuka;
-    box.innerHTML = '<div class="ml-bingkai"><video id="mlVideo" playsinline autoplay preload="auto"'+(f.poster ? ' poster="'+f.poster+'"' : '')+'><source src="'+f.video+'" type="video/mp4"></video>'+
-      '<button type="button" class="ml-mulai" id="mlMulai" onclick="putarVideoLogin()"><i>▶</i><span>Ketuk untuk memulai</span></button>'+
+    const vid = o && o.pembukaId;   // video unggahan Big Bos; kosong = video bawaan
+    box.innerHTML = '<div class="ml-bingkai"><video id="mlVideo" playsinline autoplay preload="auto"'+(!vid ? ' poster="'+PEMBUKA_BAWAAN.poster+'"' : '')+'></video>'+
+      (vid ? '<div class="ml-muat" id="mlMuat">⏳ Memuat video…</div>' : '')+
+      '<button type="button" class="ml-mulai hidden" id="mlMulai" onclick="putarVideoLogin()"><i>▶</i><span>Ketuk untuk memulai</span></button>'+
       '<button type="button" class="ml-kecil ml-suara hidden" id="mlSuara" onclick="suaraVideoLogin()" aria-label="Suara">🔊</button>'+
       '<button type="button" class="ml-nyala hidden" id="mlNyala" onclick="suaraVideoLogin(true)">🔇 Ketuk untuk suara</button>'+
-      '<button type="button" class="ml-kecil ml-lewati hidden" id="mlLewati" onclick="lewatiVideoLogin()">Lewati ⏭</button></div>'+teks+link;
+      '<button type="button" class="ml-kecil ml-lewati hidden" id="mlLewati" onclick="lewatiVideoLogin()">Lewati ⏭</button></div>';
     box.classList.remove('hidden');
     const v = $('mlVideo');
     v.addEventListener('ended', () => selesaiVideoLogin('↻ Putar lagi'));
-    // file video belum ada (mis. promosi belum diunggah ke GitHub) → kembali ke animasi tokoh
-    v.querySelector('source').addEventListener('error', () => pasangLayarLogin({ media: 'animasi' }));
-    putarVideoLogin();
+    // video tidak bisa diputar → animasi tokoh (cadangan)
+    const gagal = () => { if ($('mlVideo') !== v) return; box.classList.add('hidden'); box.innerHTML = ''; lajur.classList.remove('hidden'); animasiLogin(); };
+    v.addEventListener('error', gagal);
+    v.addEventListener('playing', () => { const m = $('mlMuat'); if (m) m.remove(); });
+    const mulai = src => { if ($('mlVideo') !== v) return; v.src = src; putarVideoLogin(); };
+    if (vid) ambilMediaLogin(vid).then(mulai).catch(() => mulai(PEMBUKA_BAWAAN.video));
+    else mulai(PEMBUKA_BAWAAN.video);
   }
   // sentuhan pertama di halaman login → suara video menyala
   ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => {
@@ -3113,8 +3459,7 @@
     const p = v.play();
     if (p && p.catch) p.catch(() => {
       if ($('mlVideo') !== v) return;   // tampilan sudah diganti
-      // suara ditolak browser → putar tanpa suara dulu
-      v.muted = true; tandaSuara(v);
+      v.muted = true; tandaSuara(v);    // suara ditolak browser → putar tanpa suara dulu
       v.play().catch(() => { if ($('mlVideo') === v) selesaiVideoLogin('▶ Ketuk untuk memulai'); });
     });
   }
@@ -3143,7 +3488,7 @@
   aturTombolInstall();
   (function(){
     const t = ambilToken();
-    if (t){ $('inToken').value = t; masuk(t, tokenDiingat(), true); }
+    if (t){ $('inToken').value = t; masuk(t, tokenDiingat(), true); siapkanPromo().then(aturDiam); }
     else mulaiLayarLogin();
   })();
 </script>
