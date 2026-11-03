@@ -371,7 +371,7 @@
   <!-- MEMBER -->
   <section id="v-member" class="hidden">
     <div class="kepala"><div><h1>Member</h1><p>Token login, Gmail untuk folder Drive, dan tanda tangan untuk PDF.</p></div>
-      <div class="alat"><input type="search" id="mCari" placeholder="Cari nama / NIP" style="width:220px"><button class="btn toska" type="button" onclick="bukaMember()">＋ Tambah member</button></div></div>
+      <div class="alat"><input type="search" id="mCari" placeholder="Cari nama / NIP" style="width:220px"><button class="btn garis" type="button" onclick="unduhSemuaKartu()">🪪 Unduh kartu token</button><button class="btn toska" type="button" onclick="bukaMember()">＋ Tambah member</button></div></div>
     <div id="mTabel"></div>
   </section>
 
@@ -407,6 +407,10 @@
       <p class="catatan" style="margin-bottom:10px">Laporan lama yang kolom RHK-nya kosong (tanda <span class="chip merah">RHK ?</span>) ditebak dari kode template, judul, atau keterangan — misalnya "Media Sosial" → RHK 9, "Evaluasi Kinerja" → RHK 7. Yang tidak bisa ditebak, pilih RHK-nya lewat Edit.</p>
       <button class="btn" type="button" onclick="perbaikiRhk()">Perbaiki RHK kosong</button>
       <div id="iRhkHasil" style="margin-top:10px"></div></div>
+    <div class="langkah"><h3><span class="no">5</span>Rapikan folder PDF per RHK</h3>
+      <p class="catatan" style="margin-bottom:10px">PDF baru otomatis masuk <b>LAPORAN RHK / NAMA / TAHUN / BULAN / RHK …</b> (sesuai tanggal kegiatan &amp; judul RHK). Tombol ini memindahkan PDF lama yang sudah disetujui ke susunan yang sama. Folder yang dibagikan ke member tidak berubah, jadi member tetap bisa membukanya.</p>
+      <button class="btn" type="button" onclick="rapikanFolderPdf()">Rapikan folder PDF</button>
+      <div id="iFolderHasil" style="margin-top:10px"></div></div>
   </section>
 
   <!-- TEMPAT SAMPAH -->
@@ -1529,7 +1533,7 @@ async function drawLap(ctx,l,X){
         '<td>'+esc(m.kecamatan || '-')+'</td>'+
         '<td>'+(m.adaTtd ? '<span class="st ok">'+(m.ttdJenis === 'qr' ? 'QR' : 'Gambar')+'</span>' : '<span class="st tunggu">Belum</span>')+'</td>'+
         '<td>'+(m.aktif ? '<span class="st ok">Aktif</span>' : '<span class="st hapus">Nonaktif</span>')+'</td>'+
-        '<td><div class="aksi"><button class="btn garis kecil" onclick="bukaMember(\''+m.id+'\')">Edit</button><button class="btn garis kecil" onclick="menuTtd(\''+m.id+'\')">TTD</button>'+
+        '<td><div class="aksi"><button class="btn garis kecil" onclick="bukaMember(\''+m.id+'\')">Edit</button><button class="btn garis kecil" onclick="kartuToken(\''+m.id+'\')">Kartu</button><button class="btn garis kecil" onclick="menuTtd(\''+m.id+'\')">TTD</button>'+
           (m.gmail && !m.dibagikan ? '<button class="btn garis kecil" onclick="bagikanUlang(\''+m.id+'\')">Bagikan</button>' : '')+
           '<button class="btn merah kecil" onclick="hapusMember(\''+m.id+'\')">Hapus</button></div></td></tr>').join('')+'</tbody></table></div>';
   };
@@ -1558,6 +1562,90 @@ async function drawLap(ctx,l,X){
     tutupKecil();
     toast(r.member.gmail ? (r.dibagikan ? 'Tersimpan · folder Drive dibagikan ke '+r.member.gmail : 'Tersimpan, tapi folder gagal dibagikan — periksa Gmail') : 'Tersimpan · token '+r.member.token);
     await segarkan(); MUAT.member();
+  }
+  // ---- Kartu token: gambar PNG per member (nama + token), dibuat di browser dari data asli ----
+  let logoKartu = null;
+  function muatLogoKartu(){
+    if (logoKartu) return logoKartu;
+    logoKartu = new Promise(res => {
+      const svg = logoVY().replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" ');
+      const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null);
+      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
+    return logoKartu;
+  }
+  function potongBaris(x, teks, lebar){
+    const kata = String(teks).split(/\s+/), baris = []; let b = '';
+    kata.forEach(k => { const c = b ? b + ' ' + k : k; if (x.measureText(c).width > lebar && b){ baris.push(b); b = k; } else b = c; });
+    if (b) baris.push(b); return baris;
+  }
+  /** Kartu 1012×638 px (rasio kartu nama/ATM). */
+  async function gambarKartu(m){
+    try{ await document.fonts.load('800 40px "Plus Jakarta Sans"'); }catch(e){}
+    const W = 1012, H = 638, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d'), F = '"Plus Jakarta Sans", Poppins, Arial, sans-serif';
+    const kotak = (a, b, w, h, r) => { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); };
+    x.fillStyle = '#FFFFFF'; kotak(0, 0, W, H, 36); x.fill();
+    // atas: nama aplikasi
+    x.save(); kotak(0, 0, W, H, 36); x.clip();
+    x.fillStyle = '#7A9A2E'; x.fillRect(0, 0, W, 150);
+    x.fillStyle = '#F28C28'; x.fillRect(0, 150, W, 8);
+    x.restore();
+    const logo = await muatLogoKartu(); if (logo) x.drawImage(logo, 44, 27, 96, 96);
+    x.fillStyle = '#FFFFFF'; x.font = '800 54px ' + F; x.textBaseline = 'alphabetic'; x.fillText('E-RHK', 160, 82);
+    x.font = '600 23px ' + F; x.fillStyle = '#F4F9E6'; x.fillText('Laporan RHK Pendamping PKH', 162, 118);
+    // nama, NIP, kecamatan
+    x.fillStyle = '#5E6358'; x.font = '700 20px ' + F; x.fillText('NAMA', 60, 218);
+    x.fillStyle = '#1F2A14'; x.font = '800 40px ' + F;
+    const nama = potongBaris(x, m.nama || '-', W - 120).slice(0, 2);
+    nama.forEach((b, i) => x.fillText(b, 60, 266 + i * 46));
+    let y = 266 + (nama.length - 1) * 46 + 40;
+    x.font = '600 22px ' + F; x.fillStyle = '#5E6358';
+    const ket = [m.nip ? 'NIP ' + m.nip : '', m.kecamatan ? 'Kec. ' + m.kecamatan : ''].filter(Boolean).join('   ·   ');
+    if (ket){ x.fillText(ket, 60, y); y += 20; }
+    // token
+    const ty = Math.max(y + 22, 372);
+    x.fillStyle = '#FFE8D1'; kotak(60, ty, W - 120, 132, 22); x.fill();
+    x.strokeStyle = '#F28C28'; x.lineWidth = 4; kotak(60, ty, W - 120, 132, 22); x.stroke();
+    x.fillStyle = '#8A4510'; x.font = '700 20px ' + F; x.fillText('TOKEN LOGIN', 92, ty + 40);
+    x.fillStyle = '#1F2A14'; x.font = '800 64px "Consolas", "Courier New", monospace';
+    const tok = String(m.token || '').split('').join(' ');
+    let uk = 64; while (x.measureText(tok).width > W - 190 && uk > 30){ uk -= 4; x.font = '800 ' + uk + 'px "Consolas", "Courier New", monospace'; }
+    x.fillText(tok, 92, ty + 108);
+    // bawah
+    x.fillStyle = '#5E6358'; x.font = '600 18px ' + F; x.fillText('Jangan bagikan token ini ke orang lain.', 60, H - 52);
+    x.fillStyle = '#4F6A17'; x.font = '800 24px ' + F; x.textAlign = 'right'; x.fillText('Jayengcode.vx.com', W - 60, H - 50); x.textAlign = 'left';
+    x.strokeStyle = '#D6D8D2'; x.lineWidth = 2; kotak(1, 1, W - 2, H - 2, 35); x.stroke();
+    return c;
+  }
+  function namaFileKartu(m){ return 'KARTU-TOKEN_' + String(m.nama || 'MEMBER').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').toUpperCase() + '.png'; }
+  async function unduhKanvas(c, nama){
+    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+    const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = nama; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(u), 4000);
+  }
+  async function kartuToken(id){
+    const m = A.init.member.find(x => x.id === id); if (!m) return;
+    const c = await gambarKartu(m), url = c.toDataURL('image/png');
+    bukaKecil('<div class="panel-kepala"><h3>Kartu token</h3><button class="x" onclick="tutupKecil()">×</button></div>'+
+      '<img src="'+url+'" alt="Kartu token '+esc(m.nama)+'" style="width:100%;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.12);margin-bottom:12px">'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn toska" onclick="unduhKartu(\''+m.id+'\')">⤓ Unduh gambar</button><button class="btn garis" onclick="tutupKecil()">Tutup</button></div>');
+  }
+  async function unduhKartu(id){ const m = A.init.member.find(x => x.id === id); if (m) await unduhKanvas(await gambarKartu(m), namaFileKartu(m)); }
+  async function unduhSemuaKartu(){
+    const q = $('mCari').value.trim().toLowerCase();
+    const list = A.init.member.filter(m => m.aktif && m.token && (!q || (m.nama+' '+m.nip).toLowerCase().indexOf(q) > -1));
+    if (!list.length) return toast('Tidak ada member aktif untuk dibuatkan kartu.', true);
+    if (!confirm('Unduh '+list.length+' kartu token (1 gambar PNG per member)?\nBila browser bertanya, izinkan "unduh banyak file".')) return;
+    loader(true, 'Membuat kartu…');
+    try{
+      for (let i = 0; i < list.length; i++){
+        $('loaderTeks').textContent = 'Membuat kartu '+(i+1)+' dari '+list.length+'…';
+        await unduhKanvas(await gambarKartu(list[i]), namaFileKartu(list[i]));
+        await tunggu(350);
+      }
+    } finally { loader(false); }
+    toast('✓ '+list.length+' kartu token diunduh');
   }
   async function bagikanUlang(id){ try{ await jalan('Membagikan folder…', () => api('adminBagikanUlang', id)); toast('✓ Folder dibagikan'); await segarkan(); MUAT.member(); }catch(e){} }
   async function hapusMember(id){
@@ -1861,6 +1949,20 @@ async function drawLap(ctx,l,X){
       (r.sisa ? ' '+r.sisa+' laporan belum bisa ditebak — pilih RHK lewat Rekap → Edit:<ul style="margin:6px 0 0 18px">'+
         r.contohSisa.map(x => '<li>'+esc(x.nama)+' · '+esc(fmtTgl(x.tanggal))+' · '+esc(x.judul)+'</li>').join('')+'</ul>' : ' Semua laporan sudah ber-RHK.')+'</div>';
     await segarkan();
+  }
+  async function rapikanFolderPdf(){
+    if (!confirm('Pindahkan semua PDF yang sudah disetujui ke folder per RHK?')) return;
+    let mulai = 0, jml = 0, gagal = 0, r;
+    loader(true, 'Merapikan folder PDF…');
+    try{
+      do {
+        r = await api('adminRapikanFolderPdf', mulai);
+        jml += r.dipindah; gagal += r.gagal; mulai = r.berikut;
+        $('loaderTeks').textContent = 'Merapikan folder PDF… '+mulai+' dari '+r.total;
+      } while (!r.selesai);
+    }catch(e){ loader(false); $('iFolderHasil').innerHTML = '<div class="alert merah">'+esc(pesanErr(e))+' — klik lagi untuk melanjutkan.</div>'; return; }
+    loader(false);
+    $('iFolderHasil').innerHTML = '<div class="alert '+(gagal ? 'kuning' : 'hijau')+'">✓ '+jml+' PDF dipindah ke folder per RHK.'+(gagal ? ' '+gagal+' PDF tidak ditemukan / gagal dipindah.' : '')+'</div>';
   }
   async function simpanProfilBos(){
     try{ await jalan('Menyimpan…', () => api('superSimpanProfil', { nama:$('bsNama').value, jabatan:$('bsJabatan').value, nip:$('bsNip').value })); }catch(e){ return; }
