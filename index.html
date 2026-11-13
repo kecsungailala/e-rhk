@@ -601,6 +601,9 @@
     .info-sv.siap{background:#EEF2E3;color:var(--primary-dark);border:1px solid #B7CB82}
     .info-sv.belum{background:var(--accent-soft);color:var(--accent-text);border:1px solid #F7C99A}
     .info-sv:empty{display:none}
+  .pita-tgl{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:#ecfdf5;border:1px solid #F4F9E6;border-radius:12px;padding:10px 12px;margin:0 0 10px}
+  .pita-tgl .kecil{font-size:12px;color:#5E7A1E;margin-top:2px}
+  .pita-tgl-aksi{display:flex;gap:6px;flex-wrap:wrap}
   </style>
 </head>
 <body>
@@ -1215,9 +1218,14 @@
   function renderDaftarMember(){
     const d = S.dash; if (!d) return;
     const r = $('pfRhk').value, st = $('pfStatus').value, q = $('pfCari').value.trim().toLowerCase();
-    const list = d.laporan.filter(l => (!r || l.rhk === r) && (!st || l.status === st) &&
+    if (S.pfTgl && String(S.pfTgl).slice(0,7) !== d.bulan) S.pfTgl = '';
+    const tg = S.pfTgl || '';
+    const list = d.laporan.filter(l => (!tg || l.tanggal === tg) && (!r || l.rhk === r) && (!st || l.status === st) &&
       (!q || (l.uraian+' '+l.tempat+' '+l.rhk+' '+l.lokasi).toLowerCase().indexOf(q) > -1));
-    const aktif = r || st || q;
+    const aktif = r || st || q || tg;
+    const pitaTgl = !tg ? '' : '<div class="pita-tgl"><div><b>📅 '+esc(fmtTgl(tg))+'</b><div class="kecil">'+list.length+' kegiatan di tanggal ini — periksa apakah sudah sesuai.</div></div>'+
+      '<div class="pita-tgl-aksi"><button class="btn utama kecil" type="button" onclick="bukaForm(null, \''+tg+'\')">＋ Tambah kegiatan</button>'+
+      '<button class="btn putih kecil" type="button" onclick="hapusTglFilter()">✕ Semua tanggal</button></div></div>';
     $('pfReset').style.display = aktif ? '' : 'none';
     const grup = gabungLaporan(list);
     const menunggu = d.laporan.filter(l => l.status !== 'Disetujui').length;
@@ -1225,7 +1233,7 @@
       (aktif ? 'Tampil '+list.length+' dari '+d.laporan.length+' laporan' : d.laporan.length+' laporan') +
       (menunggu ? ' · '+menunggu+' menunggu koreksi admin (masih bisa diedit)' : '');
     if (!d.laporan.length){ $('pDaftar').innerHTML = '<div class="kosong">Belum ada laporan di '+esc(fmtBulan(d.bulan))+'.</div>'; return; }
-    if (!list.length){ $('pDaftar').innerHTML = '<div class="kosong">Tidak ada laporan yang cocok dengan filter.</div>'; return; }
+    if (!list.length){ $('pDaftar').innerHTML = pitaTgl + '<div class="kosong">Tidak ada laporan yang cocok dengan filter.</div>'; return; }
     const tombol = (ikon, teks, fn, id, kls) => '<button class="btn '+(kls||'putih')+' kecil" onclick="'+fn+'(\''+id+'\')">'+ikon+' '+teks+'</button>';
     const chipRhk = r => r ? '<span class="chip">'+esc(labelRhk(r))+'</span>' : '<span class="chip" style="background:#fee2e2;color:#991b1b" title="RHK belum dipilih — buka Edit lalu pilih RHK">RHK ?</span>';
     const baris = (l, kls, no) => {
@@ -1268,9 +1276,20 @@
         '</div></td></tr>';
       if (terbuka) g.forEach((x, j) => { s += baris(x, 'sub-lap', no+'.'+(j+1)); });
     });
-    $('pDaftar').innerHTML = s + '</tbody></table>';
+    $('pDaftar').innerHTML = pitaTgl + s + '</tbody></table>';
     muatStripFoto();
   }
+  /** Ketuk tanggal di kalender: sudah ada laporan → tampilkan laporan tanggal itu; belum ada → langsung isi laporan. */
+  function lihatTanggal(t){
+    const d = S.dash;
+    const ada = d && (d.laporan || []).some(l => l.tanggal === t);
+    if (!ada){ S.pfTgl = ''; bukaForm(null, t); return; }
+    S.pfTgl = t;
+    renderDaftarMember();
+    const el = $('pfInfo') || $('pDaftar');
+    if (el && el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+  function hapusTglFilter(){ S.pfTgl = ''; renderDaftarMember(); }
   const gKunci = g => g.map(x => x.id).sort().join(',').slice(0, 200);
   function bukaRincian(k){
     const g = GRUP[k]; if (!g) return;
@@ -1309,7 +1328,7 @@
   }
   ['pfRhk','pfStatus'].forEach(id => $(id).addEventListener('change', renderDaftarMember));
   $('pfCari').addEventListener('input', renderDaftarMember);
-  $('pfReset').addEventListener('click', () => { $('pfRhk').value = ''; $('pfStatus').value = ''; $('pfCari').value = ''; renderDaftarMember(); });
+  $('pfReset').addEventListener('click', () => { S.pfTgl = ''; $('pfRhk').value = ''; $('pfStatus').value = ''; $('pfCari').value = ''; renderDaftarMember(); });
 
   /** Lihat: rincian laporan + foto. Foto yang tidak bisa dimuat diberi tautan ke Drive. */
   async function lihatFoto(id){
@@ -1535,10 +1554,10 @@
     const ringkas = '<div class="kal-ringkas"><span class="st ok">✅ '+info.terisi+' dari '+info.hariKerja+' hari kerja terisi</span>'+
       (info.kosong.length ? '<span class="st kurang">⛔ '+info.kosong.length+' hari kerja belum ada kegiatan</span>' : '<span class="st ok">Tidak ada hari kosong 👍</span>')+'</div>';
     $('pKalender').innerHTML = ringkas + htmlKalender(info, h => (h.st === 'kosong' || h.st === 'hariini' || (h.st === 'ada' && h.t <= d.hariIni)) ? "isiTanggal('"+h.t+"')" : '', '') +
-      '<div class="catatan" style="margin-top:6px">Ketuk tanggal merah/kuning untuk langsung menambah laporan di tanggal itu.</div>';
+      '<div class="catatan" style="margin-top:6px">Ketuk tanggal hijau untuk melihat laporan di tanggal itu · tanggal merah/kuning langsung ke isi laporan.</div>';
     return info;
   }
-  function isiTanggal(t){ bukaForm(null, t); }
+  function isiTanggal(t){ lihatTanggal(t); }
 
   /** Daftar rekap per RHK dengan bar kemajuan (dipakai member & admin). */
   function htmlRekap(rekap){
@@ -2689,7 +2708,7 @@
   /** Siapkan foto untuk slot n (kamera: diberi cap, galeri: polos), tampilkan, lalu unggah di latar belakang. */
   async function gambarSlot(n){
     const sl = S.slot[n]; if (!sl) return;
-    const dataUrl = await prosesFoto(sl.file, sl.kamera ? {
+    const dataUrl = await prosesFoto(sl.file, sl.infoCap = sl.kamera ? {
       nama: sl.nama, waktu: fmtWaktuFoto(sl.waktu),
       lat: sl.lokasi ? sl.lokasi.lat : null, lng: sl.lokasi ? sl.lokasi.lng : null,
       akurasi: sl.lokasi ? sl.lokasi.akurasi : null, alamat: sl.lokasi ? sl.lokasi.alamat : '',
@@ -2725,31 +2744,78 @@
     return new Blob([a], { type: (du.slice(5, i).split(';')[0]) || 'image/jpeg' });
   }
   function namaFotoGaleri(sl){ return 'E-RHK_' + String(sl.nama).replace(/[^\w]+/g, '_') + '_' + keInputWaktu(sl.waktu || new Date()).replace(/[-:T]/g, '') + '.jpg'; }
-  function unduhFoto(sl){
+  // Salinan yang disimpan ke HP: minimal ±500 KB (foto yang diunggah ke laporan tidak berubah).
+  const MAKS_GALERI = 500 * 1024;
+  // Salinan untuk HP dibuat ulang dari file asli kamera (tajam), MINIMAL ±500 KB (dicari yang paling dekat 500 KB).
+  function kanvasKeBlob(c, q){ return new Promise(r => c.toBlob(b => r(b), 'image/jpeg', q)); }
+  function skalaKanvas(c, f){
+    const k = document.createElement('canvas'); k.width = Math.round(c.width * f); k.height = Math.round(c.height * f);
+    const x = k.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(c, 0, 0, k.width, k.height); return k;
+  }
+  async function pasMinimal(c){
+    for (let putaran = 0; putaran < 10; putaran++){
+      const atas = await kanvasKeBlob(c, 0.95);
+      if (atas && atas.size >= MAKS_GALERI){
+        // kualitas terendah yang hasilnya masih >= 500 KB (agar tidak terlalu besar)
+        let lo = 0.6, hi = 0.95, pas = atas;
+        const bawah = await kanvasKeBlob(c, lo);
+        if (bawah && bawah.size >= MAKS_GALERI) return bawah;
+        for (let i = 0; i < 6; i++){
+          const q = (lo + hi) / 2, bl = await kanvasKeBlob(c, q);
+          if (bl && bl.size >= MAKS_GALERI){ pas = bl; hi = q; } else lo = q;
+        }
+        return pas;
+      }
+      if (Math.max(c.width, c.height) >= 6000) break;   // batas aman kanvas HP
+      c = skalaKanvas(c, Math.min(1.3, 6000 / Math.max(c.width, c.height)));   // foto terlalu polos → diperbesar sampai >= 500 KB
+    }
+    return await kanvasKeBlob(c, 0.95);
+  }
+  async function kecilkanFotoGaleri(sl){
+    const asli = dataUrlKeBlob(sl.dataUrl);
+    try{
+      if (sl.file && sl.infoCap){
+        const c = await prosesFoto(sl.file, sl.infoCap, { maks: 4096, kanvas: true });
+        const b = await pasMinimal(c);
+        if (b) return b;
+      }
+      const im = await muatGambar(asli); const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0);
+      return (await pasMinimal(c)) || asli;
+    }catch(e){ return asli; }
+  }
+  function siapkanFotoGaleri(sl){
+    if (!sl.janjiHp) sl.janjiHp = kecilkanFotoGaleri(sl).then(b => (sl.blobHp = b)).catch(() => (sl.blobHp = dataUrlKeBlob(sl.dataUrl)));
+    return sl.janjiHp;
+  }
+  async function unduhFoto(sl){
+    const blob = await siapkanFotoGaleri(sl);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(dataUrlKeBlob(sl.dataUrl)); a.download = namaFotoGaleri(sl);
+    a.href = URL.createObjectURL(blob); a.download = namaFotoGaleri(sl);
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 30000);
   }
+  function ukuranKb(b){ return b ? Math.max(1, Math.round(b.size / 1024)) : '-'; }
   function autoSimpanAktif(){ try{ return localStorage.getItem('erhk_autosimpan') !== '0'; }catch(e){ return true; } }
   function tandaSimpan(n, teks){ const el = $('fSimpan'+n); if (el) el.textContent = teks; }
   /** Dipanggil begitu foto kamera selesai diberi cap. */
   function simpanOtomatis(n){
     const sl = S.slot[n];
     if (!sl || !sl.kamera || !sl.dataUrl || sl.disimpan) return;
+    siapkanFotoGaleri(sl);   // diperkecil di belakang layar (juga untuk tombol 💾 iPhone)
     if (PERANGKAT_IOS){ tandaSimpan(n, '📱 iPhone: ketuk 💾 Simpan ke Galeri lalu pilih "Simpan Gambar".'); return; }
     if (!autoSimpanAktif()){ tandaSimpan(n, 'Simpan otomatis mati — ketuk 💾 bila ingin menyimpan.'); return; }
-    try{ unduhFoto(sl); sl.disimpan = true; tandaSimpan(n, '💾 Tersimpan otomatis di HP (folder Download / Galeri).'); }
-    catch(e){ tandaSimpan(n, 'Gagal menyimpan otomatis — ketuk 💾 Simpan ke Galeri.'); }
+    tandaSimpan(n, '⏳ Menyiapkan salinan foto untuk HP…');
+    unduhFoto(sl).then(() => { sl.disimpan = true; tandaSimpan(n, '💾 Tersimpan otomatis di HP (folder Download / Galeri) · ±'+ukuranKb(sl.blobHp)+' KB.'); })
+      .catch(() => tandaSimpan(n, 'Gagal menyimpan otomatis — ketuk 💾 Simpan ke Galeri.'));
   }
   /** Tombol 💾 Simpan ke Galeri. */
   async function simpanKeGaleri(n){
     const sl = S.slot[n]; if (!sl || !sl.dataUrl) return;
     if (!PERANGKAT_IOS){
-      try{ unduhFoto(sl); sl.disimpan = true; tandaSimpan(n, '💾 Tersimpan di HP (folder Download / Galeri).'); toast('💾 Foto disimpan ke folder Download'); return; }catch(e){}
+      try{ await unduhFoto(sl); sl.disimpan = true; tandaSimpan(n, '💾 Tersimpan di HP (folder Download / Galeri).'); toast('💾 Foto disimpan ke folder Download'); return; }catch(e){}
     } else {
       // file dibuat tanpa menunggu (await) supaya izin ketukan tidak hilang di iPhone
-      const file = new File([dataUrlKeBlob(sl.dataUrl)], namaFotoGaleri(sl), { type:'image/jpeg' });
+      const file = new File([sl.blobHp || dataUrlKeBlob(sl.dataUrl)], namaFotoGaleri(sl), { type:'image/jpeg' });
       if (navigator.canShare && navigator.canShare({ files:[file] })){
         try{ await navigator.share({ files:[file] }); tandaSimpan(n, '✅ Bila tadi memilih "Simpan Gambar", foto sudah ada di aplikasi Foto.'); return; }
         catch(e){ if (e && e.name === 'AbortError') return; }
@@ -2758,7 +2824,7 @@
     // cadangan terakhir: tekan lama gambar
     $('fotoView').innerHTML = '<div class="alert hijau" style="margin-bottom:10px"><b>💾 Simpan ke Galeri</b>'+
       '<b style="display:inline">Tekan lama gambar di bawah</b> lalu pilih <i>Simpan ke Foto</i> / <i>Simpan gambar</i>.</div>'+
-      '<img src="'+sl.dataUrl+'">';
+      '<img src="'+(sl.blobHp ? URL.createObjectURL(sl.blobHp) : sl.dataUrl)+'">';
     buka('modalFoto');
   }
   function aturSakelarSimpan(){
@@ -2811,9 +2877,9 @@
   }
 
   /** Perkecil foto (maks 1024px) + cap: nama, lokasi & koordinat (bila ada), hari-tanggal-jam. */
-  async function prosesFoto(file, info){
+  async function prosesFoto(file, info, opsi){
     const img = await muatGambar(file);
-    const MAX = 1024;
+    const MAX = (opsi && opsi.maks) || 1024;
     const s = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
     const w = Math.round(img.naturalWidth * s), h = Math.round(img.naturalHeight * s);
     const c = document.createElement('canvas'); c.width = w; c.height = h;
@@ -2885,7 +2951,7 @@
     x.fillText(info.nama, kiri, yy);
     yy += Math.round(f1*0.3);
     baris.forEach(b => { yy += lh; pasTeks(x, b.t, maks, f2, false); x.fillStyle = b.warna; x.fillText(b.t, kiri, yy); });
-    return c.toDataURL('image/jpeg', 0.72);
+    return opsi && opsi.kanvas ? c : c.toDataURL('image/jpeg', 0.72);
   }
   // ---------- UPLOAD BANYAK FOTO (1 foto = 1 laporan) ----------
   const MAKS_BANYAK = 40;
