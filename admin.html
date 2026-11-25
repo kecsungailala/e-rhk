@@ -1435,6 +1435,10 @@ async function drawLap(ctx,l,X){
     const g = /^G9\|/.test(id) ? id.split('|') : null;
     return g ? api('adminSimpanPdfRhk9', g[1], g[2], keB64(bytes)) : api('adminSimpanPdf', id, keB64(bytes));
   }
+  function akhirBulan(ym){
+    const m = /^(\d{4})-(\d{2})/.exec(ym || ''); if (!m) return ym;
+    return m[1] + '-' + m[2] + '-' + String(new Date(+m[1], +m[2], 0).getDate()).padStart(2, '0');
+  }
   function periodeBulan(ym){
     const N = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     const m = /^(\d{4})-(\d{2})/.exec(ym || ''); return m ? N[+m[2] - 1] + ' ' + m[1] : '-';
@@ -1451,14 +1455,16 @@ async function drawLap(ctx,l,X){
         kop: b.kop || '',
         ket: b.rhk9
           ? [['Keterangan Kegiatan', l.keterangan || '-'], ['Periode', periodeBulan(b.bulan || String(b.awal || l.tanggal).slice(0, 7))],
-             ['Jumlah', b.jumlah + ' kegiatan (target ' + (b.target || '-') + ')'], ['Tempat', l.tempat || '-']]
+             ['Jumlah', b.jumlah + ' kegiatan'], ['Tempat', l.tempat || '-']]
           : [['Keterangan Kegiatan', l.keterangan || '-'], ['Hari/Tanggal', hariTgl(l.tanggal) || '-'],
               ['Pukul', (l.jamMulai ? jam(l).replace('–', ' – ') + ' WIB' : '-')], ['Tempat', l.tempat || '-']],
         fotos: b.fotoIds.map((f, i) => ({ src: foto[f] || '', link: /^https?:/.test(f) ? f : (foto[f] ? '' : ''), ket: b.rhk9 ? '' : (l.fotoKet[i] || '') })).filter(f => f.src || f.link),
         kolom: b.rhk9 ? 4 : 2   // RHK 9: foto saja, 4 per baris, rapat
       };
       const ctx = await pdfCtx();
-      await drawLap(ctx, { isi: (l.isi && l.isi.trim()) ? l.isi : (l.keterangan || '-'), tanggal: l.tanggal }, X);
+      // RHK 9: tanggal pembuatan laporan = tanggal akhir bulan
+      const tglBuat = b.rhk9 ? akhirBulan(String(b.awal || l.tanggal).slice(0, 7)) : l.tanggal;
+      await drawLap(ctx, { isi: (l.isi && l.isi.trim()) ? l.isi : (l.keterangan || '-'), tanggal: tglBuat }, X);
       return { bytes: await ctx.doc.save(), nama: b.nama };
     }
     // RHK 2 & supervisi: PDF server (format Aplikasi 3) + lampiran + watermark & QR
