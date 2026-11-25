@@ -561,14 +561,14 @@ async function drawLap(ctx,l,X){
  const fs=X.fotos,kr=X.ket;if(!fs.length&&!kr.length)return;
  newPage();y=24;setF('bold',FS);text('LAMPIRAN DOKUMENTASI',105,y,{align:'center'});y+=9;
  if(kr.length){setF('normal',FS);kr.forEach(([a,v])=>{const ls=wrapAll(v,W-44);ls.forEach((s,i)=>{if(i===0){text(a,M,y);text(':',M+40,y)}text(s,M+44,y);y+=lh})});y+=5}
- const cw=82,ch=56,g=6;let ry=y;
- for(let i=0;i<fs.length;i++){const f=fs[i],c=i%2,hk=fs.slice(i-c,i-c+2).some(z=>z.ket);if(c===0){ensure(ch+(hk?8:3));ry=y}
-  const xx=(fs.length%2===1&&i===fs.length-1)?M+(W-cw)/2:M+c*(cw+g);
+ const nk=X.kolom||2,g=nk>2?3:6,cw=nk>2?(W-g*(nk-1))/nk:82,ch=nk>2?cw*1.42:56;let ry=y;
+ for(let i=0;i<fs.length;i++){const f=fs[i],c=i%nk,hk=fs.slice(i-c,i-c+nk).some(z=>z.ket);if(c===0){ensure(ch+(hk?8:3));ry=y}
+  const xx=(nk===2&&fs.length%2===1&&i===fs.length-1)?M+(W-cw)/2:M+c*(cw+g);
   ctx.page.drawRectangle({x:xx*K,y:PH-(ry+ch)*K,width:cw*K,height:ch*K,borderColor:LGREY,borderWidth:.2*K});
   if(f.src){try{const d=await dims(f.src);let iw=cw-2,ih=iw*d.h/d.w;if(ih>ch-2){ih=ch-2;iw=ih*d.w/d.h}await img(f.src,xx+(cw-iw)/2,ry+(ch-ih)/2,iw,ih)}catch(e){}}
   else{setF('normal',9.5);text('Foto tersimpan di Google Drive:',xx+cw/2,ry+ch/2-3,{align:'center',color:GREY});let s=clean(f.link);const full=s;while(s.length>8&&tw(s+'...')>cw-6)s=s.slice(0,-1);if(s!==full)s+='...';text(s,xx+cw/2,ry+ch/2+3,{align:'center',color:BLUE});setF('normal',FS)}
   if(f.ket){setF('italic',10);text(wrapAll(f.ket,cw)[0],xx+cw/2,ry+ch+4.6,{align:'center'});setF('normal',FS)}
-  if(c===1||i===fs.length-1)y=ry+ch+(hk?8:3)}}
+  if(c===nk-1||i===fs.length-1)y=ry+ch+(hk?8:3)}}
   // ================= INTI =================
   const $ = id => document.getElementById(id);
   const BLN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -988,7 +988,7 @@ async function drawLap(ctx,l,X){
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!$('mKecil').classList.contains('hidden')) tutupKecil(); else tutupPanel(); } });
   document.addEventListener('click', e => {
-    const kecil = e.target.closest('.bd-foto img'); if (kecil && kecil.src) return perbesarFoto(kecil);
+    const kecil = e.target.closest('.bd-foto img, .g9-foto img'); if (kecil && kecil.src) return perbesarFoto(kecil);
     const im = e.target.closest('.foto-grid img'); if (im && im.src){ $('layarImg').src = im.src; $('layar').classList.remove('hidden'); }
   });
 
@@ -1435,6 +1435,10 @@ async function drawLap(ctx,l,X){
     const g = /^G9\|/.test(id) ? id.split('|') : null;
     return g ? api('adminSimpanPdfRhk9', g[1], g[2], keB64(bytes)) : api('adminSimpanPdf', id, keB64(bytes));
   }
+  function periodeBulan(ym){
+    const N = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const m = /^(\d{4})-(\d{2})/.exec(ym || ''); return m ? N[+m[2] - 1] + ' ' + m[1] : '-';
+  }
   async function susunPdf(id){
     if (!window.PDFLib) throw new Error('Pustaka PDF belum termuat. Muat ulang halaman.');
     const g9 = /^G9\|/.test(id) ? id.split('|') : null;
@@ -1446,11 +1450,12 @@ async function drawLap(ctx,l,X){
         info: { judul: l.judul || 'Laporan', nama: b.pembuat.nama, nip: b.pembuat.nip, tempat: b.pembuat.tempat || judulKata(l.kecamatan) || '', ttd: b.ttd ? b.ttd.src : '' },
         kop: b.kop || '',
         ket: b.rhk9
-          ? [['Keterangan Kegiatan', l.keterangan || '-'], ['Periode', (b.awal === b.akhir ? hariTgl(b.awal) : fmtTglPanjang(b.awal).replace(/^\S+, /, '') + ' s/d ' + fmtTglPanjang(b.akhir).replace(/^\S+, /, ''))],
+          ? [['Keterangan Kegiatan', l.keterangan || '-'], ['Periode', periodeBulan(b.bulan || String(b.awal || l.tanggal).slice(0, 7))],
              ['Jumlah', b.jumlah + ' kegiatan (target ' + (b.target || '-') + ')'], ['Tempat', l.tempat || '-']]
           : [['Keterangan Kegiatan', l.keterangan || '-'], ['Hari/Tanggal', hariTgl(l.tanggal) || '-'],
               ['Pukul', (l.jamMulai ? jam(l).replace('–', ' – ') + ' WIB' : '-')], ['Tempat', l.tempat || '-']],
-        fotos: b.fotoIds.map((f, i) => ({ src: foto[f] || '', link: /^https?:/.test(f) ? f : (foto[f] ? '' : ''), ket: l.fotoKet[i] || '' })).filter(f => f.src || f.link)
+        fotos: b.fotoIds.map((f, i) => ({ src: foto[f] || '', link: /^https?:/.test(f) ? f : (foto[f] ? '' : ''), ket: b.rhk9 ? '' : (l.fotoKet[i] || '') })).filter(f => f.src || f.link),
+        kolom: b.rhk9 ? 4 : 2   // RHK 9: foto saja, 4 per baris, rapat
       };
       const ctx = await pdfCtx();
       await drawLap(ctx, { isi: (l.isi && l.isi.trim()) ? l.isi : (l.keterangan || '-'), tanggal: l.tanggal }, X);
