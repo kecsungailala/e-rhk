@@ -315,6 +315,10 @@
     .g9-foto figure{margin:0;border:1px solid var(--border);border-radius:10px;padding:6px;background:var(--card)}
     .g9-foto img{width:100%;height:110px;object-fit:cover;border-radius:7px;background:#EEF0EA;display:block;cursor:zoom-in}
     .g9-foto figcaption{font-size:12px;margin-top:5px}
+  .latar-pil{position:fixed;right:16px;bottom:16px;z-index:9000;display:flex;align-items:center;gap:8px;background:#0f172a;color:#fff;font-size:13px;padding:9px 14px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.25);pointer-events:none}
+  .latar-pil.hidden{display:none}
+  .latar-spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:latarPutar .8s linear infinite}
+  @keyframes latarPutar{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
@@ -591,7 +595,22 @@ async function drawLap(ctx,l,X){
   }
   function jam(l){ return (l.jamMulai||'')+(l.jamSelesai?'–'+l.jamSelesai:''); }
   function loader(on, teks){ $('loader').classList.toggle('hidden',!on); if(teks) $('loaderTeks').textContent=teks; }
-  let toastT; function toast(m, gagal){ const t=$('toast'); t.textContent=m; t.className='on'+(gagal?' gagal':''); clearTimeout(toastT); toastT=setTimeout(()=>t.className='',3800); }
+  let toastT; function toast(m, gagal, ms){ const t=$('toast'); t.textContent=m; t.className='on'+(gagal?' gagal':''); clearTimeout(toastT); toastT=setTimeout(()=>t.className='',ms||3800); }
+  // ===== Proses latar belakang: simpan/setujui/muat data tidak mengunci layar =====
+  const LATAR = { n:0, teks:'', ids:new Set() };
+  function aturLatar(){
+    let e = $('latarPil');
+    if (!e){ e = document.createElement('div'); e.id = 'latarPil'; e.className = 'latar-pil hidden'; document.body.appendChild(e); }
+    e.classList.toggle('hidden', !LATAR.n);
+    e.innerHTML = '<span class="latar-spin"></span>'+esc(LATAR.teks || 'Memproses')+(LATAR.n > 1 ? ' · '+LATAR.n+' proses' : '')+'…';
+  }
+  async function latar(teks, fn){ LATAR.n++; LATAR.teks = teks; aturLatar(); try{ return await fn(); } finally { LATAR.n--; aturLatar(); } }
+  function muatDiam(teks, fn){ return latar(teks, fn).catch(e => { toast(pesanErr(e), true); throw e; }); }
+  let segarT;
+  function segarkanLatar(){
+    clearTimeout(segarT);
+    segarT = setTimeout(() => { latar('Memperbarui data', async () => { await segarkan(); if (MUAT[A.view]) await MUAT[A.view](true); }).catch(() => {}); }, 300);
+  }
   const tunggu = ms => new Promise(r => setTimeout(r, ms));
   function ambilToken(){ try{ return localStorage.getItem('rhk_token') || sessionStorage.getItem('rhk_token') || ''; }catch(e){ return ''; } }
   function keluar(pesan){
@@ -686,7 +705,7 @@ async function drawLap(ctx,l,X){
     const h = new Date().getHours();
     $('sapa').textContent = (h<10?'Selamat pagi':h<15?'Selamat siang':h<18?'Selamat sore':'Selamat malam') + ', ' + (A.init.profilSuper.nama || A.init.profilSuper.jabatan || 'Big Bos');
     let r;
-    try{ r = diam === true ? await api('adminRekap', bln) : await jalan('Memuat rekap…', () => api('adminRekap', bln)); }catch(e){ return; }
+    try{ r = diam === true ? await api('adminRekap', bln) : await muatDiam('Memuat rekap', () => api('adminRekap', bln)); }catch(e){ return; }
     BR.data = r;
     const n = new Date(), dua = x => String(x).padStart(2, '0');
     $('bWaktu').textContent = 'Diperbarui '+dua(n.getHours())+':'+dua(n.getMinutes())+':'+dua(n.getSeconds())+' · otomatis tiap 1 menit';
@@ -928,7 +947,7 @@ async function drawLap(ctx,l,X){
     const f = A.super ? { pemilik:$('kPemilik').value } : { pemilik:'pendamping', jenis:'bukan-supervisi' };
     const jb = A.init.jumlah.menungguBigBos;
     $('kBigBos').innerHTML = !A.super && jb ? '<div class="alert kuning">⏳ '+jb+' laporan Katimkab (supervisi / RHK sendiri) menunggu persetujuan Big Bos.</div>' : '';
-    let d; try{ d = await jalan('Memuat…', () => api('adminDaftar', Object.assign(f, { status:'Menunggu koreksi', urut:'lama', bulan:$('kBulan').value, tanggal:$('kTgl').value, memberId:$('kMember').value, rhk:$('kRhk').value, cari:$('kCari').value, halaman:A.hal.koreksi||0, per:100 }))); }catch(e){ return; }
+    let d; try{ d = await muatDiam('Memuat data', () => api('adminDaftar', Object.assign(f, { status:'Menunggu koreksi', urut:'lama', bulan:$('kBulan').value, tanggal:$('kTgl').value, memberId:$('kMember').value, rhk:$('kRhk').value, cari:$('kCari').value, halaman:A.hal.koreksi||0, per:100 }))); }catch(e){ return; }
     tabel('koreksi', d, { wadah:'kTabel', kosong:'🎉 Tidak ada laporan yang menunggu koreksi.', gabung9: true,
       aksi: l => '<button class="btn garis kecil" onclick="lihat(\''+l.id+'\')">Lihat</button><button class="btn garis kecil" onclick="ubah(\''+l.id+'\')">Edit</button><button class="btn toska kecil" onclick="setujui([\''+l.id+'\'])">Setujui</button>',
       massal: [['✓ Setujui terpilih', ids => setujui(ids), 'toska'], ['Hapus terpilih', ids => hapus(ids), 'merah']] });
@@ -942,7 +961,7 @@ async function drawLap(ctx,l,X){
     if (!$('rBulan').dataset.siap){ $('rBulan').value = bulanIni(); $('rBulan').dataset.siap = 1; }
     isiPilihan('rMember', 'Semua member', pilihanMember(true));
     isiPilihan('rRhk', 'Semua RHK', A.init.rhk.map(t => [t.rhk, t.rhk]));
-    let d; try{ d = await jalan('Memuat…', () => api('adminDaftar', Object.assign(filterRekap(), { halaman:A.hal.rekap||0, per:100 }))); }catch(e){ return; }
+    let d; try{ d = await muatDiam('Memuat rekap', () => api('adminDaftar', Object.assign(filterRekap(), { halaman:A.hal.rekap||0, per:100 }))); }catch(e){ return; }
     tabel('rekap', d, { wadah:'rTabel', kosong:'Tidak ada laporan dengan filter ini.', gabung9: true,
       aksi: l => '<button class="btn garis kecil" onclick="lihat(\''+l.id+'\')">Lihat</button>'+(bolehUbah(l) ? '<button class="btn garis kecil" onclick="ubah(\''+l.id+'\')">Edit</button>' : '')+
         (l.status === 'Disetujui' ? linkPdf(l) : (bolehSetujui(l) ? '' : chipBos)+'<button class="btn garis kecil" onclick="pratinjau(\''+l.id+'\')">Cetak</button>')+
@@ -1047,7 +1066,15 @@ async function drawLap(ctx,l,X){
     let s = '<div class="panel-kepala"><div><div class="kec">Koreksi oleh admin · '+chipStatus(l)+'</div><h3>Edit: '+esc(l.judul)+'</h3><div class="kec">'+esc(l.nama)+'</div></div><button class="x" onclick="tutupPanel()">×</button></div>';
     if (l.status === 'Disetujui') s += '<div class="alert kuning">Laporan ini sudah disetujui. Setelah disimpan, PDF dibuat ulang dan menggantikan file lama di Drive member.</div>';
     s += '<datalist id="dlKec">'+kecs.map(k=>'<option value="'+esc(k)+'">').join('')+'</datalist><datalist id="dlDesa">'+desaList.map(k=>'<option value="'+esc(k)+'">').join('')+'</datalist>';
-    if (l.jenis === 'supervisi') s += '<div class="fg"><label>Pendamping yang disupervisi</label><select id="eMember">'+A.init.member.map(m => '<option value="'+m.id+'"'+(m.id===l.memberId?' selected':'')+'>'+esc(m.nama)+'</option>').join('')+'</select></div>';
+    if (l.jenis === 'supervisi'){
+      // pendamping di luar member (diketik sendiri saat input) → tetap memakai isian itu, tidak perlu dipilih lagi
+      const luar = !A.init.member.some(m => m.id === l.memberId && m.id !== 'ADMIN');
+      s += '<div class="fg"><label>Pendamping yang disupervisi</label><select id="eMember" onchange="aturPendampingLuar()">'+
+        A.init.member.filter(m => m.id !== 'ADMIN').map(m => '<option value="'+m.id+'"'+(!luar && m.id===l.memberId?' selected':'')+'>'+esc(m.nama)+'</option>').join('')+
+        '<option value="__lain"'+(luar?' selected':'')+'>➕ Pendamping lainnya (tulis sendiri)…</option></select></div>'+
+        '<div id="eSvLuar" class="g2'+(luar?'':' hidden')+'"><div class="fg"><label>Nama pendamping</label><input id="eSvNama" value="'+esc(luar ? l.nama : '')+'" placeholder="cth. SRI WAHYUNI"></div>'+
+        '<div class="fg"><label>NIP (opsional)</label><input id="eSvNip" inputmode="numeric" value="'+esc(luar ? l.nip : '')+'"></div></div>';
+    }
     else s += '<div class="g2"><div class="fg"><label>RHK</label><select id="eRhk">'+opsiRhk.map(t => '<option'+(t.rhk===l.rhk?' selected':'')+'>'+esc(t.rhk)+'</option>').join('')+(opsiRhk.some(t=>t.rhk===l.rhk)?'':'<option selected>'+esc(l.rhk)+'</option>')+'</select></div>'+
       (p2 ? '<div></div>' : '<div class="fg"><label>Template</label><select id="eTpl"></select></div>')+'</div>';
     s += '<div class="g3"><div class="fg"><label>Tanggal</label><input type="date" id="eTgl" value="'+esc(l.tanggal)+'"></div>'+
@@ -1102,6 +1129,7 @@ async function drawLap(ctx,l,X){
       }catch(err){}
     });
     gambarFotoEdit();
+    pasangDraf(id);
   }
   function tabelHadir(l){
     const st = {}; l.absensi.forEach(a => { st[a.kpmId] = a; });
@@ -1208,11 +1236,17 @@ async function drawLap(ctx,l,X){
   /** Setujui dengan PDF yang sudah dipratinjau (tidak disusun ulang). */
   async function setujuiPratinjau(){
     const l = A.ed.l, pr = A.prat; if (!pr || pr.basi) return;
-    try{ await jalan('Menyetujui…', () => simpanPdfId(idSetuju(l), pr.bytes)); }catch(e){ return; }
-    tutupPanel();
-    toast('✓ Disetujui — PDF masuk folder Drive member');
-    await segarkan(); MUAT[A.view] && MUAT[A.view]();
+    const id = idSetuju(l);
+    if (LATAR.ids.has(id)) return toast('Laporan ini sedang diproses di latar belakang.');
+    A.panelUbah = false; tutupPanel();
+    toast('⏳ Menyetujui di latar belakang — silakan lanjut kerja lain');
+    LATAR.ids.add(id);
+    try{ await latar('Menyetujui', () => simpanPdfId(id, pr.bytes)); toast('✓ Disetujui: '+(l.judul || '').slice(0, 50)+' — PDF masuk folder Drive member'); }
+    catch(e){ toast('✗ Gagal menyetujui: '+pesanErr(e), true, 9000); }
+    finally{ LATAR.ids.delete(id); }
+    segarkanLatar();
   }
+  function aturPendampingLuar(){ const e = $('eSvLuar'); if (e) e.classList.toggle('hidden', $('eMember').value !== '__lain'); }
   async function simpanUbah(lalSetujui){
     const l = A.ed.l, al = $('eAlert'); al.classList.add('hidden');
     const v = id => ($(id) || {}).value || '';
@@ -1222,6 +1256,10 @@ async function drawLap(ctx,l,X){
       Object.assign(d, { memberId: v('eMember'), kelompok: v('eKel'), modul: nilaiModul('eModul'), sesi: v('eSesi'), materi: v('eMateri'), pemateri: v('ePemateri'), jabatan: v('eJabatan'),
         rangkuman: v('eRangkuman'), temuan: v('eTemuan'), hadir: v('eJ_hadir'), sakit: v('eJ_sakit'), izin: v('eJ_izin'), alpa: v('eJ_alpa'),
         fotoId: (A.ed.foto[0] && A.ed.foto[0].id) || '', scanId: A.ed.scan || '', hapusScan: !!($('eHapusScan') && $('eHapusScan').checked) });
+      if (d.memberId === '__lain'){
+        if (!v('eSvNama').trim()){ al.textContent = 'Tulis nama pendamping.'; al.classList.remove('hidden'); al.scrollIntoView({ behavior:'smooth' }); return; }
+        Object.assign(d, { namaLain: v('eSvNama'), nipLain: v('eSvNip'), kecamatanLain: v('eKec') });
+      }
     } else {
       d.rhk = v('eRhk');
       if ($('eKel')){
@@ -1236,12 +1274,32 @@ async function drawLap(ctx,l,X){
     if (lalSetujui === true && A.prat && !A.prat.basi){ await setujuiPratinjau(); return; }
     const pratinjauSaja = lalSetujui === 'pratinjau';
     let r;
-    try{ r = await jalan('Menyimpan…', () => api('adminSimpanLaporan', d)); }
-    catch(e){ al.textContent = pesanErr(e); al.classList.remove('hidden'); al.scrollIntoView({ behavior:'smooth' }); return; }
-    if (pratinjauSaja){ await tampilPratinjau(r); return; }
-    tutupPanel();
+    if (pratinjauSaja){
+      try{ r = await jalan('Menyimpan…', () => api('adminSimpanLaporan', d)); }
+      catch(e){ al.textContent = pesanErr(e); al.classList.remove('hidden'); al.scrollIntoView({ behavior:'smooth' }); return; }
+      await tampilPratinjau(r); return;
+    }
+    // simpan (dan setujui) berjalan di latar belakang — panel langsung tertutup, bisa lanjut kerja lain
+    const draf = { d: d, foto: A.ed.foto.slice(), scan: A.ed.scan };
+    A.panelUbah = false; tutupPanel();
+    toast('⏳ Menyimpan'+(lalSetujui ? ' & menyetujui' : '')+' di latar belakang — silakan lanjut kerja lain');
+    try{ r = await latar(lalSetujui ? 'Menyimpan & menyetujui' : 'Menyimpan perubahan', () => api('adminSimpanLaporan', d)); }
+    catch(e){ (A.draf = A.draf || {})[l.id] = draf; toast('✗ Gagal menyimpan "'+(l.judul || '').slice(0, 40)+'": '+pesanErr(e)+' — buka Edit lagi, isian tadi masih ada.', true, 9000); return; }
+    if (A.draf) delete A.draf[l.id];
     if (lalSetujui || r.perluPdf){ await setujui([idSetuju(l)], r.perluPdf && !lalSetujui); return; }
-    toast('Perubahan disimpan'); await segarkan(); MUAT[A.view] && MUAT[A.view]();
+    toast('✓ Perubahan disimpan: '+(l.judul || '').slice(0, 50)); segarkanLatar();
+  }
+  /** Isian edit yang gagal tersimpan di latar dipasang lagi saat Edit dibuka. */
+  function pasangDraf(id){
+    const x = A.draf && A.draf[id]; if (!x) return;
+    const d = x.d, peta = { tanggal:'eTgl', jamMulai:'eJ1', jamSelesai:'eJ2', kecamatan:'eKec', desa:'eDesa', tempat:'eTempat', rhk:'eRhk', keterangan:'eKet', isi:'eIsi',
+      kelompok:'eKel', sesi:'eSesi', materi:'eMateri', pemateri:'ePemateri', jabatan:'eJabatan', rangkuman:'eRangkuman', temuan:'eTemuan', memberId:'eMember', namaLain:'eSvNama', nipLain:'eSvNip',
+      hadir:'eJ_hadir', sakit:'eJ_sakit', izin:'eJ_izin', alpa:'eJ_alpa' };
+    Object.keys(peta).forEach(k => { const e = $(peta[k]); if (e && d[k] !== undefined) e.value = d[k]; });
+    if (d.jumlah) ['hadir','sakit','izin','alpa'].forEach(k => { if ($('eJ_'+k)) $('eJ_'+k).value = d.jumlah[k]; });
+    if ($('eMember')) aturPendampingLuar();
+    A.ed.foto = x.foto; A.ed.scan = x.scan; try{ gambarFotoEdit(); }catch(e){}
+    const al = $('eAlert'); if (al){ al.textContent = 'Isian terakhir yang gagal tersimpan dipasang lagi — periksa lalu simpan ulang.'; al.classList.remove('hidden'); }
   }
 
   // ================= GAMBAR =================
@@ -1480,20 +1538,27 @@ async function drawLap(ctx,l,X){
     ids = [...new Set(ids.map(id => (A.cache && Object.values(A.cache).flat().find(l => l && l.id === id && isRhk9(l))) ? kunciRhk9(Object.values(A.cache).flat().find(l => l.id === id)) : id))];
     if (!ids.length) return;
     if (ids.length > 1 && !confirm('Setujui '+ids.length+' laporan dan buat PDF-nya?')) return;
-    const gagal = [];
-    loader(true, 'Menyiapkan PDF…');
-    try{
-      for (let i = 0; i < ids.length; i++){
-        $('loaderTeks').textContent = (buatUlang ? 'Membuat ulang PDF' : 'Menyetujui') + (ids.length > 1 ? ' '+(i+1)+' dari '+ids.length : '') + '…';
-        try{ const p = await susunPdf(ids[i]); await simpanPdfId(ids[i], p.bytes); }
-        catch(e){ gagal.push(pesanErr(e)); }
-      }
-    } finally { loader(false); }
+    // berjalan di latar belakang: panel langsung tertutup, notifikasi muncul saat selesai
+    const sibuk = ids.filter(id => LATAR.ids.has(id));
+    ids = ids.filter(id => !LATAR.ids.has(id));
+    if (!ids.length){ toast('Laporan ini sedang diproses di latar belakang.'); return; }
+    ids.forEach(id => LATAR.ids.add(id));
     if (A.pilih[A.view]) A.pilih[A.view].clear();
     tutupPanel();
-    if (gagal.length) toast((ids.length - gagal.length)+' berhasil, '+gagal.length+' gagal: '+gagal[0], true);
+    toast('⏳ '+(buatUlang ? 'Membuat ulang PDF' : 'Menyetujui')+(ids.length > 1 ? ' '+ids.length+' laporan' : '')+' di latar belakang — silakan lanjut kerja lain'+(sibuk.length ? ' ('+sibuk.length+' sudah diproses)' : ''));
+    if (MUAT[A.view]) MUAT[A.view](true);
+    const gagal = [];
+    try{
+      for (let i = 0; i < ids.length; i++){
+        LATAR.teks = (buatUlang ? 'Membuat ulang PDF' : 'Menyetujui') + (ids.length > 1 ? ' '+(i+1)+' dari '+ids.length : '');
+        try{ await latar(LATAR.teks, async () => { const p = await susunPdf(ids[i]); await simpanPdfId(ids[i], p.bytes); }); }
+        catch(e){ gagal.push(pesanErr(e)); }
+        finally{ LATAR.ids.delete(ids[i]); }
+      }
+    } finally { ids.forEach(id => LATAR.ids.delete(id)); }
+    if (gagal.length) toast('✗ '+(ids.length - gagal.length)+' berhasil, '+gagal.length+' gagal: '+gagal[0], true, 9000);
     else toast(ids.length > 1 ? '✓ '+ids.length+' laporan disetujui, PDF masuk folder Drive member' : (buatUlang ? '✓ PDF dibuat ulang' : '✓ Disetujui — PDF masuk folder Drive member'));
-    await segarkan(); MUAT[A.view] && MUAT[A.view]();
+    segarkanLatar();
   }
   /** Pratinjau / cetak PDF tanpa menyetujui. */
   async function pratinjau(id){
